@@ -521,26 +521,32 @@ function ModernApp() {
       <div className={`sidebar ${sidebarOpen ? '' : 'closed'}`}>
         <div className="sidebar-header">
           <div className="sidebar-logo">
-            <Icons.Tank /> TankMonitor
+            <Icons.Tank /> <span>TankMonitor</span>
           </div>
         </div>
         <div className="sidebar-nav">
           <div className="nav-item active">
-            <Icons.Dashboard /> Dashboard
+            <Icons.Dashboard /> <span>Dashboard</span>
           </div>
           <div className="nav-item">
-            <Icons.Chart /> Analytics
+            <Icons.Chart /> <span>Analytics</span>
           </div>
           <div className="nav-item">
-            <Icons.Alert /> Alerts
+            <Icons.Alert /> <span>Alerts</span>
           </div>
           <div className="nav-item" onClick={() => setShowConfig(true)}>
-            <Icons.Settings /> Settings
+            <Icons.Settings /> <span>Settings</span>
           </div>
         </div>
         <div className="sidebar-footer">
           <div className="nav-item" onClick={() => setSidebarOpen(!sidebarOpen)}>
-            <Icons.Menu /> Collapse Menu
+            {sidebarOpen ? (
+              <>
+                <Icons.Menu /> <span>Collapse Menu</span>
+              </>
+            ) : (
+              <Icons.Menu />
+            )}
           </div>
         </div>
       </div>
@@ -549,7 +555,15 @@ function ModernApp() {
       <div className="main-content">
         {/* Header */}
         <div className="dashboard-header">
-          <h1 className="page-title">Tank Level Monitoring</h1>
+          <div className="header-left">
+            <button
+              className="mobile-menu-toggle btn btn-icon"
+              onClick={() => setSidebarOpen(!sidebarOpen)}
+            >
+              {sidebarOpen ? <Icons.Close /> : <Icons.Menu />}
+            </button>
+            <h1 className="page-title">Tank Level Monitoring</h1>
+          </div>
           <div className="header-actions">
             <div className="form-group" style={{ margin: 0, display: 'flex', alignItems: 'center', gap: '10px' }}>
               <label className="form-label" style={{ margin: 0 }}>Time Range:</label>
@@ -567,10 +581,10 @@ function ModernApp() {
               </select>
             </div>
             <button className="btn btn-primary" onClick={fetchData}>
-              <Icons.Refresh /> Refresh
+              <Icons.Refresh /> <span className="btn-text">Refresh</span>
             </button>
             <button className="btn btn-secondary" onClick={() => setShowConfig(true)}>
-              <Icons.Settings /> API Settings
+              <Icons.Settings /> <span className="btn-text">API Settings</span>
             </button>
           </div>
         </div>
