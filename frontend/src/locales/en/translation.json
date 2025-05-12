@@ -29,6 +29,7 @@
     "dashboard": "Dashboard",
     "analytics": "Analytics",
     "anomalies": "Anomalies",
+    "reportedAnomalies": "Reported Anomalies",
     "settings": "Settings",
     "subscription": "Subscription",
     "collapseMenu": "Collapse Menu",
@@ -65,7 +66,60 @@
     "anomalyList": "Detected Anomalies",
     "timestamp": "Timestamp",
     "tankId": "Tank ID",
-    "confidence": "Confidence"
+    "confidence": "Confidence",
+    "reportMissedAnomaly": "Report Missed Anomaly",
+    "reportForm": {
+      "title": "Report Anomaly",
+      "timestamp": "Date & Time",
+      "level": "Tank Level",
+      "levelPlaceholder": "Enter tank level value",
+      "tankId": "Tank ID",
+      "notes": "Notes",
+      "notesPlaceholder": "Describe why you think this is an anomaly",
+      "submit": "Submit Report",
+      "successMessage": "Anomaly reported successfully!",
+      "levelRequired": "Tank level is required",
+      "errorReporting": "Error reporting anomaly"
+    },
+    "userList": {
+      "title": "User-Reported Anomalies",
+      "filterByStatus": "Filter by status",
+      "all": "All",
+      "pending": "Pending",
+      "confirmed": "Confirmed",
+      "rejected": "Rejected",
+      "reportNew": "Report New",
+      "reportFirst": "Report Your First Anomaly",
+      "noAnomalies": "No reported anomalies yet",
+      "timestamp": "Date & Time",
+      "level": "Level",
+      "tankId": "Tank ID",
+      "notes": "Notes",
+      "status": "Status",
+      "actions": "Actions",
+      "confirm": "Confirm",
+      "reject": "Reject",
+      "errorFetching": "Error fetching reported anomalies",
+      "errorUpdating": "Error updating anomaly status"
+    },
+    "modelFeedback": {
+      "title": "Model Performance",
+      "totalReported": "Total Reported",
+      "modelAccuracy": "Model Accuracy",
+      "falseNegativesRate": "False Negatives",
+      "reportedAnomaliesBreakdown": "Reported Anomalies Breakdown",
+      "count": "Count",
+      "noData": "No model feedback data available",
+      "errorFetching": "Error fetching model feedback",
+      "howItWorks": "How It Works",
+      "explanation": "User-reported anomalies help improve the anomaly detection model:",
+      "confirmedAnomalies": "Confirmed Anomalies",
+      "confirmedExplanation": "Anomalies that were missed by the model but confirmed by an administrator.",
+      "rejectedAnomalies": "Rejected Anomalies",
+      "rejectedExplanation": "Reports that were determined not to be actual anomalies.",
+      "pendingAnomalies": "Pending Anomalies",
+      "pendingExplanation": "Reports that are waiting for administrator review."
+    }
   },
   "subscription": {
     "choosePlan": "Choose Your Subscription Plan",
@@ -93,6 +147,13 @@
   "errors": {
     "fetchError": "Error fetching data: {{message}}. Check your API configuration.",
     "addError": "Error adding tank level reading: {{message}}"
+  },
+  "common": {
+    "loading": "Loading...",
+    "cancel": "Cancel",
+    "save": "Save",
+    "submit": "Submit",
+    "submitting": "Submitting..."
   },
   "direction": "ltr"
 }

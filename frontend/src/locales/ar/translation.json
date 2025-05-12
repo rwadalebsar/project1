@@ -29,6 +29,7 @@
     "dashboard": "لوحة المعلومات",
     "analytics": "التحليلات",
     "anomalies": "الشذوذات",
+    "reportedAnomalies": "الشذوذات المبلغ عنها",
     "settings": "الإعدادات",
     "subscription": "الاشتراك",
     "collapseMenu": "طي القائمة",
@@ -65,7 +66,60 @@
     "anomalyList": "الشذوذات المكتشفة",
     "timestamp": "الطابع الزمني",
     "tankId": "معرف الخزان",
-    "confidence": "الثقة"
+    "confidence": "الثقة",
+    "reportMissedAnomaly": "الإبلاغ عن شذوذ مفقود",
+    "reportForm": {
+      "title": "الإبلاغ عن شذوذ",
+      "timestamp": "التاريخ والوقت",
+      "level": "مستوى الخزان",
+      "levelPlaceholder": "أدخل قيمة مستوى الخزان",
+      "tankId": "معرف الخزان",
+      "notes": "ملاحظات",
+      "notesPlaceholder": "صف لماذا تعتقد أن هذا شذوذ",
+      "submit": "إرسال التقرير",
+      "successMessage": "تم الإبلاغ عن الشذوذ بنجاح!",
+      "levelRequired": "مستوى الخزان مطلوب",
+      "errorReporting": "خطأ في الإبلاغ عن الشذوذ"
+    },
+    "userList": {
+      "title": "الشذوذات المبلغ عنها من قبل المستخدمين",
+      "filterByStatus": "تصفية حسب الحالة",
+      "all": "الكل",
+      "pending": "قيد الانتظار",
+      "confirmed": "مؤكد",
+      "rejected": "مرفوض",
+      "reportNew": "الإبلاغ عن جديد",
+      "reportFirst": "الإبلاغ عن أول شذوذ",
+      "noAnomalies": "لا توجد شذوذات مبلغ عنها حتى الآن",
+      "timestamp": "التاريخ والوقت",
+      "level": "المستوى",
+      "tankId": "معرف الخزان",
+      "notes": "ملاحظات",
+      "status": "الحالة",
+      "actions": "الإجراءات",
+      "confirm": "تأكيد",
+      "reject": "رفض",
+      "errorFetching": "خطأ في جلب الشذوذات المبلغ عنها",
+      "errorUpdating": "خطأ في تحديث حالة الشذوذ"
+    },
+    "modelFeedback": {
+      "title": "أداء النموذج",
+      "totalReported": "إجمالي المبلغ عنها",
+      "modelAccuracy": "دقة النموذج",
+      "falseNegativesRate": "السلبيات الكاذبة",
+      "reportedAnomaliesBreakdown": "تفصيل الشذوذات المبلغ عنها",
+      "count": "العدد",
+      "noData": "لا توجد بيانات متاحة عن أداء النموذج",
+      "errorFetching": "خطأ في جلب بيانات أداء النموذج",
+      "howItWorks": "كيف يعمل",
+      "explanation": "تساعد الشذوذات المبلغ عنها من قبل المستخدمين في تحسين نموذج اكتشاف الشذوذات:",
+      "confirmedAnomalies": "الشذوذات المؤكدة",
+      "confirmedExplanation": "الشذوذات التي فاتت النموذج ولكن تم تأكيدها من قبل المسؤول.",
+      "rejectedAnomalies": "الشذوذات المرفوضة",
+      "rejectedExplanation": "التقارير التي تم تحديد أنها ليست شذوذات فعلية.",
+      "pendingAnomalies": "الشذوذات قيد الانتظار",
+      "pendingExplanation": "التقارير التي تنتظر مراجعة المسؤول."
+    }
   },
   "subscription": {
     "choosePlan": "اختر خطة الاشتراك الخاصة بك",
@@ -93,6 +147,13 @@
   "errors": {
     "fetchError": "خطأ في جلب البيانات: {{message}}. تحقق من تكوين API الخاص بك.",
     "addError": "خطأ في إضافة قراءة مستوى الخزان: {{message}}"
+  },
+  "common": {
+    "loading": "جاري التحميل...",
+    "cancel": "إلغاء",
+    "save": "حفظ",
+    "submit": "إرسال",
+    "submitting": "جاري الإرسال..."
   },
   "direction": "rtl"
 }

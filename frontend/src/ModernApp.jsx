@@ -4,6 +4,9 @@ import { useNavigate } from 'react-router-dom'
 import { useAuth } from './context/AuthContext'
 import { useTranslation } from 'react-i18next'
 import LanguageSwitcher from './components/common/LanguageSwitcher'
+import ReportAnomalyForm from './components/anomalies/ReportAnomalyForm'
+import UserAnomaliesList from './components/anomalies/UserAnomaliesList'
+import ModelFeedback from './components/anomalies/ModelFeedback'
 import './modern.css'
 import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend,
@@ -416,6 +419,7 @@ function ModernApp({ initialTab = 'dashboard' }) {
   const [showConfig, setShowConfig] = useState(false)
   const [sidebarOpen, setSidebarOpen] = useState(true)
   const [activeTab, setActiveTab] = useState(initialTab)
+  const [showReportForm, setShowReportForm] = useState(false)
 
   const { user, logout, hasSubscription } = useAuth()
   const navigate = useNavigate()
@@ -591,6 +595,16 @@ function ModernApp({ initialTab = 'dashboard' }) {
           </div>
 
           <div
+            className={`nav-item ${activeTab === 'user-anomalies' ? 'active' : ''}`}
+            onClick={() => setActiveTab('user-anomalies')}
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+            </svg>
+            <span>{t('dashboard.reportedAnomalies')}</span>
+          </div>
+
+          <div
             className={`nav-item ${activeTab === 'settings' ? 'active' : ''}`}
             onClick={() => setShowConfig(true)}
           >
@@ -636,24 +650,30 @@ function ModernApp({ initialTab = 'dashboard' }) {
             >
               {sidebarOpen ? <Icons.Close /> : <Icons.Menu />}
             </button>
-            <h1 className="page-title">{t('app.title')}</h1>
+            <h1 className="page-title">
+              {activeTab === 'user-anomalies'
+                ? t('dashboard.reportedAnomalies')
+                : t('app.title')}
+            </h1>
           </div>
           <div className="header-actions">
-            <div className="form-group" style={{ margin: 0, display: 'flex', alignItems: 'center', gap: '10px' }}>
-              <label className="form-label" style={{ margin: 0 }}>{t('dashboard.timeRange')}:</label>
-              <select
-                className="form-select"
-                value={timeRange}
-                onChange={handleTimeRangeChange}
-                style={{ width: 'auto' }}
-              >
-                <option value={7}>{t('dashboard.days7')}</option>
-                <option value={30}>{t('dashboard.days30')}</option>
-                <option value={90}>{t('dashboard.months3')}</option>
-                <option value={180}>{t('dashboard.months6')}</option>
-                <option value={365}>{t('dashboard.months12')}</option>
-              </select>
-            </div>
+            {activeTab !== 'user-anomalies' && (
+              <div className="form-group" style={{ margin: 0, display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <label className="form-label" style={{ margin: 0 }}>{t('dashboard.timeRange')}:</label>
+                <select
+                  className="form-select"
+                  value={timeRange}
+                  onChange={handleTimeRangeChange}
+                  style={{ width: 'auto' }}
+                >
+                  <option value={7}>{t('dashboard.days7')}</option>
+                  <option value={30}>{t('dashboard.days30')}</option>
+                  <option value={90}>{t('dashboard.months3')}</option>
+                  <option value={180}>{t('dashboard.months6')}</option>
+                  <option value={365}>{t('dashboard.months12')}</option>
+                </select>
+              </div>
+            )}
             <button className="btn btn-primary" onClick={fetchData}>
               <Icons.Refresh /> <span className="btn-text">{t('dashboard.refresh')}</span>
             </button>
@@ -688,7 +708,7 @@ function ModernApp({ initialTab = 'dashboard' }) {
         )}
 
         {/* Dashboard Content */}
-        {loading ? (
+        {loading && activeTab !== 'user-anomalies' ? (
           <div style={{
             display: 'flex',
             justifyContent: 'center',
@@ -699,6 +719,38 @@ function ModernApp({ initialTab = 'dashboard' }) {
           }}>
             {t('app.loading')}
           </div>
+        ) : activeTab === 'user-anomalies' ? (
+          <>
+            {/* User-Reported Anomalies Section */}
+            <div className="dashboard-grid col-span-12">
+              <div className="col-span-8">
+                <UserAnomaliesList
+                  apiUrl={apiConfig.apiUrl}
+                  tankId={apiConfig.tankId}
+                  onReportAnomaly={() => setShowReportForm(true)}
+                />
+              </div>
+              <div className="col-span-4">
+                <ModelFeedback apiUrl={apiConfig.apiUrl} />
+              </div>
+            </div>
+
+            {/* Report Anomaly Modal */}
+            {showReportForm && (
+              <div className="modal-overlay">
+                <ReportAnomalyForm
+                  onClose={() => setShowReportForm(false)}
+                  onSuccess={() => {
+                    setShowReportForm(false);
+                    // Refresh the anomalies list
+                    fetchData();
+                  }}
+                  tankId={apiConfig.tankId}
+                  apiUrl={apiConfig.apiUrl}
+                />
+              </div>
+            )}
+          </>
         ) : (
           <>
             {/* Stats Cards */}
@@ -760,6 +812,14 @@ function ModernApp({ initialTab = 'dashboard' }) {
                   </div>
                   <div className="col-span-6">
                     <ModernAnomaliesList anomalies={anomalies} />
+                    <div style={{ marginTop: '1rem', textAlign: 'center' }}>
+                      <button
+                        className="btn btn-secondary"
+                        onClick={() => setShowReportForm(true)}
+                      >
+                        {t('anomalies.reportMissedAnomaly')}
+                      </button>
+                    </div>
                   </div>
                 </>
               ) : (
@@ -768,9 +828,15 @@ function ModernApp({ initialTab = 'dashboard' }) {
                     <div style={{ fontSize: '1.2rem', fontWeight: '600', color: 'var(--gray-700)', marginBottom: '10px' }}>
                       {t('anomalies.noAnomalies')}
                     </div>
-                    <p style={{ color: 'var(--gray-500)' }}>
+                    <p style={{ color: 'var(--gray-500)', marginBottom: '20px' }}>
                       {t('anomalies.noAnomaliesDesc')}
                     </p>
+                    <button
+                      className="btn btn-secondary"
+                      onClick={() => setShowReportForm(true)}
+                    >
+                      {t('anomalies.reportMissedAnomaly')}
+                    </button>
                   </div>
                 </div>
               )}

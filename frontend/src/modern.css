@@ -93,9 +93,16 @@ body {
   display: flex;
   flex-direction: column;
   position: fixed;
+  left: 0;
   height: 100vh;
   z-index: 10;
   transition: var(--transition);
+}
+
+/* RTL support for sidebar */
+[dir="rtl"] .sidebar {
+  left: auto;
+  right: 0;
 }
 
 .sidebar.closed {
@@ -197,6 +204,12 @@ body {
   margin-left: auto;
 }
 
+/* RTL support for premium feature badge */
+[dir="rtl"] .premium-feature {
+  margin-left: 0;
+  margin-right: auto;
+}
+
 .logout-item {
   color: var(--danger);
   margin-top: var(--space-2);
@@ -229,6 +242,11 @@ body {
   height: 20px;
 }
 
+/* RTL support for nav items */
+[dir="rtl"] .nav-item {
+  flex-direction: row-reverse;
+}
+
 .sidebar-footer {
   margin-top: auto;
   padding-top: var(--space-6);
@@ -243,9 +261,21 @@ body {
   transition: var(--transition);
 }
 
+/* RTL support for main content */
+[dir="rtl"] .main-content {
+  margin-left: 0;
+  margin-right: 260px;
+}
+
 .sidebar.closed + .main-content {
   margin-left: 80px;
   max-width: calc(100% - 80px);
+}
+
+/* RTL support for collapsed sidebar */
+[dir="rtl"] .sidebar.closed + .main-content {
+  margin-left: 0;
+  margin-right: 80px;
 }
 
 /* Dashboard Header */
@@ -497,6 +527,21 @@ body {
   padding-right: 2.5rem;
 }
 
+/* Modal Overlay */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  padding: 1rem;
+}
+
 /* Responsive */
 @media (max-width: 1024px) {
   .stats-grid {
@@ -523,8 +568,16 @@ body {
     box-shadow: var(--shadow-xl);
   }
 
+  [dir="rtl"] .sidebar {
+    transform: translateX(100%);
+  }
+
   .sidebar.closed {
     transform: translateX(-100%);
+  }
+
+  [dir="rtl"] .sidebar.closed {
+    transform: translateX(100%);
   }
 
   .sidebar.open {
@@ -533,7 +586,12 @@ body {
 
   .main-content {
     margin-left: 0;
+    margin-right: 0;
     max-width: 100%;
+  }
+
+  [dir="rtl"] .main-content {
+    margin-right: 0;
   }
 
   .mobile-menu-toggle {

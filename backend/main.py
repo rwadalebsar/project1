@@ -65,6 +65,20 @@ class AnomalyResult(BaseModel):
     is_anomaly: bool
     anomaly_score: float
 
+class UserReportedAnomaly(BaseModel):
+    timestamp: datetime
+    level: float
+    tank_id: str = "tank1"
+    user_id: Optional[str] = None
+    notes: Optional[str] = None
+    status: str = "pending"  # pending, confirmed, rejected
+
+class UserReportedAnomalyCreate(BaseModel):
+    timestamp: datetime
+    level: float
+    tank_id: str = "tank1"
+    notes: Optional[str] = None
+
 class SubscriptionTier(BaseModel):
     name: str
     max_tanks: int
@@ -78,6 +92,10 @@ api_service = TankAPIService()
 
 # Load initial data
 tank_data = api_service.fetch_tank_levels()
+
+# In-memory storage for user-reported anomalies
+# In a production environment, this would be stored in a database
+user_reported_anomalies = []
 
 # Anomaly detection model
 def detect_anomalies(data, contamination=0.01):
@@ -150,8 +168,11 @@ async def get_tank_levels(
             if not user.is_admin:
                 # For mock data, we'll just assign some data to the user
                 # In a real implementation, you'd filter by actual user_id
-                df['user_id'] = df['user_id'].fillna(user.username)
-                df = df[df['user_id'] == user.username]
+                if 'user_id' not in df.columns:
+                    df['user_id'] = user.username  # Assign all data to this user for mock data
+                else:
+                    df['user_id'] = df['user_id'].fillna(user.username)
+                    df = df[df['user_id'] == user.username]
 
         # Sort by timestamp (newest first)
         df = df.sort_values('timestamp', ascending=False)
@@ -238,8 +259,11 @@ async def get_anomalies(
         # Filter by user_id if user is authenticated
         if user and not user.is_admin:
             # For mock data, we'll just assign some data to the user
-            df['user_id'] = df['user_id'].fillna(user.username)
-            df = df[df['user_id'] == user.username]
+            if 'user_id' not in df.columns:
+                df['user_id'] = user.username  # Assign all data to this user for mock data
+            else:
+                df['user_id'] = df['user_id'].fillna(user.username)
+                df = df[df['user_id'] == user.username]
 
         # Sort by timestamp
         df = df.sort_values('timestamp')
@@ -280,8 +304,11 @@ async def get_stats(
         # Filter by user_id if user is authenticated
         if user and not user.is_admin:
             # For mock data, we'll just assign some data to the user
-            df['user_id'] = df['user_id'].fillna(user.username)
-            df = df[df['user_id'] == user.username]
+            if 'user_id' not in df.columns:
+                df['user_id'] = user.username  # Assign all data to this user for mock data
+            else:
+                df['user_id'] = df['user_id'].fillna(user.username)
+                df = df[df['user_id'] == user.username]
 
         # Apply subscription tier limits
         if user:
@@ -373,6 +400,192 @@ async def get_current_subscription(user: Optional[UserInDB] = Depends(get_user_f
     }
 
     return subscription_info
+
+# User-reported anomalies endpoints
+@app.post("/api/user-anomalies", response_model=UserReportedAnomaly)
+async def report_anomaly(
+    anomaly: UserReportedAnomalyCreate,
+    user: Optional[UserInDB] = Depends(get_user_from_header)
+):
+    """Report an anomaly that wasn't detected by the system"""
+    global user_reported_anomalies
+
+    # Check if user is authenticated
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Authentication required to report anomalies",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
+    try:
+        # Create a new user-reported anomaly
+        new_anomaly = UserReportedAnomaly(
+            timestamp=anomaly.timestamp,
+            level=anomaly.level,
+            tank_id=anomaly.tank_id,
+            user_id=user.username,
+            notes=anomaly.notes,
+            status="pending"
+        )
+
+        # Add to in-memory storage
+        user_reported_anomalies.append(new_anomaly.dict())
+
+        # In a real implementation, you would save to a database here
+
+        return new_anomaly
+    except Exception as e:
+        logger.error(f"Error reporting anomaly: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error reporting anomaly: {str(e)}")
+
+@app.get("/api/user-anomalies", response_model=List[UserReportedAnomaly])
+async def get_user_reported_anomalies(
+    tank_id: Optional[str] = Query(None, description="Tank ID to filter by"),
+    status: Optional[str] = Query(None, description="Status to filter by (pending, confirmed, rejected)"),
+    user: Optional[UserInDB] = Depends(get_user_from_header)
+):
+    """Get user-reported anomalies"""
+    global user_reported_anomalies
+
+    # Check if user is authenticated
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Authentication required to view reported anomalies",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
+    try:
+        # Convert to DataFrame for easier filtering
+        if not user_reported_anomalies:
+            return []
+
+        df = pd.DataFrame(user_reported_anomalies)
+
+        # Filter by tank_id if provided
+        if tank_id and 'tank_id' in df.columns:
+            df = df[df['tank_id'] == tank_id]
+
+        # Filter by status if provided
+        if status and 'status' in df.columns:
+            df = df[df['status'] == status]
+
+        # Filter by user_id if not admin
+        if not user.is_admin and 'user_id' in df.columns:
+            df = df[df['user_id'] == user.username]
+
+        # Sort by timestamp (newest first)
+        if 'timestamp' in df.columns:
+            df = df.sort_values('timestamp', ascending=False)
+
+        # Convert back to list of dictionaries
+        result = df.to_dict('records') if not df.empty else []
+        return result
+    except Exception as e:
+        logger.error(f"Error getting user-reported anomalies: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error getting user-reported anomalies: {str(e)}")
+
+@app.put("/api/user-anomalies/{anomaly_id}", response_model=UserReportedAnomaly)
+async def update_anomaly_status(
+    anomaly_id: int,
+    status: str = Query(..., description="New status (pending, confirmed, rejected)"),
+    user: Optional[UserInDB] = Depends(get_user_from_header)
+):
+    """Update the status of a user-reported anomaly (admin only)"""
+    global user_reported_anomalies
+
+    # Check if user is authenticated and is admin
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Authentication required to update anomaly status",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
+    if not user.is_admin:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Only administrators can update anomaly status"
+        )
+
+    try:
+        # Check if anomaly_id is valid
+        if anomaly_id < 0 or anomaly_id >= len(user_reported_anomalies):
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Anomaly with ID {anomaly_id} not found"
+            )
+
+        # Update the status
+        user_reported_anomalies[anomaly_id]['status'] = status
+
+        # In a real implementation, you would update the database here
+
+        return UserReportedAnomaly(**user_reported_anomalies[anomaly_id])
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error updating anomaly status: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error updating anomaly status: {str(e)}")
+
+@app.get("/api/model-feedback")
+async def get_model_feedback(user: Optional[UserInDB] = Depends(get_user_from_header)):
+    """Get feedback on the anomaly detection model performance"""
+    global user_reported_anomalies
+
+    # Check if user is authenticated and is admin
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Authentication required to view model feedback",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
+    if not user.is_admin:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Only administrators can view model feedback"
+        )
+
+    try:
+        # Calculate model performance metrics
+        if not user_reported_anomalies:
+            return {
+                "total_reported_anomalies": 0,
+                "confirmed_anomalies": 0,
+                "rejected_anomalies": 0,
+                "pending_anomalies": 0,
+                "false_negatives_rate": 0,
+                "model_accuracy": 100.0
+            }
+
+        df = pd.DataFrame(user_reported_anomalies)
+
+        # Count by status
+        total = len(df)
+        confirmed = len(df[df['status'] == 'confirmed']) if 'status' in df.columns else 0
+        rejected = len(df[df['status'] == 'rejected']) if 'status' in df.columns else 0
+        pending = len(df[df['status'] == 'pending']) if 'status' in df.columns else 0
+
+        # Calculate false negatives rate (confirmed anomalies that were missed by the model)
+        false_negatives_rate = (confirmed / total) * 100 if total > 0 else 0
+
+        # Calculate model accuracy (assuming confirmed anomalies are false negatives)
+        # This is a simplified metric - in a real system you'd use more sophisticated evaluation
+        model_accuracy = 100 - false_negatives_rate
+
+        return {
+            "total_reported_anomalies": total,
+            "confirmed_anomalies": confirmed,
+            "rejected_anomalies": rejected,
+            "pending_anomalies": pending,
+            "false_negatives_rate": false_negatives_rate,
+            "model_accuracy": model_accuracy
+        }
+    except Exception as e:
+        logger.error(f"Error getting model feedback: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error getting model feedback: {str(e)}")
 
 if __name__ == "__main__":
     import uvicorn
