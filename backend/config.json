@@ -1,0 +1,7 @@
+{
+  "api_url": "https://api.example.com/tank-levels",
+  "api_key": "your-api-key",
+  "tank_id": "tank1",
+  "use_mock_data": true,
+  "update_interval_hours": 1
+}

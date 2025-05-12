@@ -29,6 +29,12 @@ h1 {
   font-size: 1.8rem;
 }
 
+.header-controls {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
 .time-range-selector {
   display: flex;
   align-items: center;
@@ -41,6 +47,19 @@ h1 {
   border-radius: 4px;
   background-color: white;
   font-size: 14px;
+}
+
+.config-button {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  background-color: #6c757d;
+  padding: 8px 12px;
+  font-size: 14px;
+}
+
+.config-button:hover {
+  background-color: #5a6268;
 }
 
 /* Error and loading states */
@@ -243,9 +262,109 @@ button:hover {
   color: #6c757d;
 }
 
+/* API Configuration Modal */
+.config-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.config-modal {
+  background-color: white;
+  border-radius: 8px;
+  padding: 2rem;
+  width: 90%;
+  max-width: 500px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+}
+
+.config-modal h3 {
+  margin-top: 0;
+  margin-bottom: 1.5rem;
+  color: #2c3e50;
+  font-size: 1.4rem;
+  text-align: center;
+}
+
+.config-field {
+  margin-bottom: 1.2rem;
+}
+
+.config-field label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-weight: 500;
+  color: #2c3e50;
+}
+
+.config-field input[type="text"] {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 14px;
+}
+
+.config-field.checkbox {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.config-field.checkbox label {
+  margin-bottom: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.config-field.checkbox small {
+  display: block;
+  margin-top: 5px;
+  color: #6c757d;
+  font-size: 12px;
+}
+
+.config-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 1.5rem;
+}
+
+.save-btn {
+  background-color: #28a745;
+}
+
+.save-btn:hover {
+  background-color: #218838;
+}
+
+.cancel-btn {
+  background-color: #6c757d;
+}
+
+.cancel-btn:hover {
+  background-color: #5a6268;
+}
+
 /* Responsive adjustments */
 @media (max-width: 768px) {
   .dashboard-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+
+  .header-controls {
+    width: 100%;
     flex-direction: column;
     align-items: flex-start;
     gap: 10px;
@@ -265,5 +384,10 @@ button:hover {
   .add-reading-form {
     flex-direction: column;
     align-items: stretch;
+  }
+
+  .config-modal {
+    width: 95%;
+    padding: 1.5rem;
   }
 }

@@ -141,6 +141,96 @@ const TankStats = ({ stats }) => {
   );
 };
 
+// Component for API configuration
+const ApiConfig = ({ apiConfig, setApiConfig, onSave, showConfig, setShowConfig }) => {
+  const [tempConfig, setTempConfig] = useState({ ...apiConfig })
+
+  const handleChange = (e) => {
+    const { name, value, type, checked } = e.target
+    setTempConfig({
+      ...tempConfig,
+      [name]: type === 'checkbox' ? checked : value
+    })
+  }
+
+  const handleSubmit = (e) => {
+    e.preventDefault()
+    onSave(tempConfig)
+    setShowConfig(false)
+  }
+
+  if (!showConfig) return null
+
+  return (
+    <div className="config-overlay">
+      <div className="config-modal">
+        <h3>API Configuration</h3>
+        <form onSubmit={handleSubmit}>
+          <div className="config-field">
+            <label htmlFor="apiUrl">API URL:</label>
+            <input
+              type="text"
+              id="apiUrl"
+              name="apiUrl"
+              value={tempConfig.apiUrl}
+              onChange={handleChange}
+              placeholder="http://api.example.com/tank-levels"
+            />
+          </div>
+
+          <div className="config-field">
+            <label htmlFor="apiKey">API Key:</label>
+            <input
+              type="text"
+              id="apiKey"
+              name="apiKey"
+              value={tempConfig.apiKey}
+              onChange={handleChange}
+              placeholder="your-api-key"
+            />
+          </div>
+
+          <div className="config-field">
+            <label htmlFor="tankId">Tank ID:</label>
+            <input
+              type="text"
+              id="tankId"
+              name="tankId"
+              value={tempConfig.tankId}
+              onChange={handleChange}
+              placeholder="tank1"
+            />
+          </div>
+
+          <div className="config-field checkbox">
+            <label>
+              <input
+                type="checkbox"
+                name="useMockData"
+                checked={tempConfig.useMockData}
+                onChange={handleChange}
+              />
+              Use Mock Data
+            </label>
+            <small>(Enable this if you don't have a real API endpoint)</small>
+          </div>
+
+          <div className="config-actions">
+            <button type="submit" className="save-btn">Save Configuration</button>
+            <button
+              type="button"
+              className="cancel-btn"
+              onClick={() => setShowConfig(false)}
+            >
+              Cancel
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  )
+}
+
 // Main App component
 function App() {
   const [tankLevels, setTankLevels] = useState([])
@@ -151,17 +241,43 @@ function App() {
   const [error, setError] = useState(null)
   const [newLevel, setNewLevel] = useState(5.0)
   const [timeRange, setTimeRange] = useState(30) // Default to 30 days
+  const [showConfig, setShowConfig] = useState(false)
 
+  // API configuration state
+  const [apiConfig, setApiConfig] = useState(() => {
+    // Try to load from localStorage
+    const savedConfig = localStorage.getItem('tankApiConfig')
+    return savedConfig ? JSON.parse(savedConfig) : {
+      apiUrl: 'http://localhost:8000',
+      apiKey: '',
+      tankId: 'tank1',
+      useMockData: true
+    }
+  })
+
+  // Save API config to localStorage when it changes
+  useEffect(() => {
+    localStorage.setItem('tankApiConfig', JSON.stringify(apiConfig))
+  }, [apiConfig])
+
+  // Fetch data when timeRange or apiConfig changes
   useEffect(() => {
     fetchData()
-  }, [timeRange])
+  }, [timeRange, apiConfig])
 
   const fetchData = async () => {
     try {
       setLoading(true)
 
+      const headers = apiConfig.apiKey ? {
+        'Authorization': `Bearer ${apiConfig.apiKey}`
+      } : {}
+
       // Fetch tank levels for the selected time range
-      const levelsResponse = await axios.get(`http://localhost:8000/api/tank-levels?days=${timeRange}`)
+      const levelsResponse = await axios.get(
+        `${apiConfig.apiUrl}/api/tank-levels?days=${timeRange}&tank_id=${apiConfig.tankId}`,
+        { headers }
+      )
 
       // Sort by timestamp (oldest first for charts)
       const sortedData = [...levelsResponse.data].sort((a, b) =>
@@ -176,16 +292,22 @@ function App() {
       setRecentLevels(recentData)
 
       // Fetch anomalies
-      const anomaliesResponse = await axios.get(`http://localhost:8000/api/anomalies?days=${timeRange}`)
+      const anomaliesResponse = await axios.get(
+        `${apiConfig.apiUrl}/api/anomalies?days=${timeRange}&tank_id=${apiConfig.tankId}`,
+        { headers }
+      )
       setAnomalies(anomaliesResponse.data)
 
       // Fetch stats
-      const statsResponse = await axios.get(`http://localhost:8000/api/stats?days=${timeRange}`)
+      const statsResponse = await axios.get(
+        `${apiConfig.apiUrl}/api/stats?days=${timeRange}&tank_id=${apiConfig.tankId}`,
+        { headers }
+      )
       setStats(statsResponse.data)
 
       setError(null)
     } catch (err) {
-      setError('Error fetching data. Is the backend server running?')
+      setError(`Error fetching data: ${err.message}. Check your API configuration.`)
       console.error('Error fetching data:', err)
     } finally {
       setLoading(false)
@@ -194,10 +316,14 @@ function App() {
 
   const handleAddReading = async () => {
     try {
-      await axios.post('http://localhost:8000/api/tank-levels', {
+      const headers = apiConfig.apiKey ? {
+        'Authorization': `Bearer ${apiConfig.apiKey}`
+      } : {}
+
+      await axios.post(`${apiConfig.apiUrl}/api/tank-levels`, {
         level: parseFloat(newLevel),
-        tank_id: "tank1"
-      })
+        tank_id: apiConfig.tankId
+      }, { headers })
 
       // Refresh data after adding a new reading
       fetchData()
@@ -205,9 +331,15 @@ function App() {
       // Reset form
       setNewLevel(5.0)
     } catch (err) {
-      setError('Error adding tank level reading')
+      setError(`Error adding tank level reading: ${err.message}`)
       console.error('Error adding reading:', err)
     }
+  }
+
+  const handleSaveConfig = (newConfig) => {
+    setApiConfig(newConfig)
+    // Fetch data with new config
+    fetchData()
   }
 
   const handleTimeRangeChange = (e) => {
@@ -218,21 +350,39 @@ function App() {
     <div className="app-container">
       <header className="dashboard-header">
         <h1>Tank Level Monitoring Dashboard</h1>
-        <div className="time-range-selector">
-          <label htmlFor="timeRange">Time Range: </label>
-          <select
-            id="timeRange"
-            value={timeRange}
-            onChange={handleTimeRangeChange}
+        <div className="header-controls">
+          <div className="time-range-selector">
+            <label htmlFor="timeRange">Time Range: </label>
+            <select
+              id="timeRange"
+              value={timeRange}
+              onChange={handleTimeRangeChange}
+            >
+              <option value={7}>Last 7 days</option>
+              <option value={30}>Last 30 days</option>
+              <option value={90}>Last 3 months</option>
+              <option value={180}>Last 6 months</option>
+              <option value={365}>Last 12 months</option>
+            </select>
+          </div>
+          <button
+            className="config-button"
+            onClick={() => setShowConfig(true)}
+            title="Configure API Settings"
           >
-            <option value={7}>Last 7 days</option>
-            <option value={30}>Last 30 days</option>
-            <option value={90}>Last 3 months</option>
-            <option value={180}>Last 6 months</option>
-            <option value={365}>Last 12 months</option>
-          </select>
+            <span role="img" aria-label="Settings">⚙️</span> API Settings
+          </button>
         </div>
       </header>
+
+      {/* API Configuration Modal */}
+      <ApiConfig
+        apiConfig={apiConfig}
+        setApiConfig={setApiConfig}
+        onSave={handleSaveConfig}
+        showConfig={showConfig}
+        setShowConfig={setShowConfig}
+      />
 
       {error && <div className="error-message">{error}</div>}
 

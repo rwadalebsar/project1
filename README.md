@@ -5,11 +5,13 @@ A comprehensive dashboard for monitoring tank level sensors with data visualizat
 
 ## Features
 - RESTful API built with FastAPI
+- External API integration for tank level data
 - Interactive charts for visualizing tank level data
 - Historical data tracking for up to 12 months
 - Detailed views for recent data (3 days)
 - Machine learning-based anomaly detection
 - Responsive design for all device sizes
+- Configurable API settings with fallback to mock data
 
 ## Tech Stack
 - **Backend**: Python, FastAPI, Pandas, NumPy, scikit-learn
@@ -75,6 +77,26 @@ The frontend server will run at http://localhost:5173
 - `POST /api/tank-levels` - Add a new tank level reading
 - `GET /api/anomalies` - Get detected anomalies in tank level data
 - `GET /api/stats` - Get statistics about tank levels
+
+## External API Integration
+
+The application is designed to work with external tank level sensor APIs. It includes:
+
+1. **Configurable API Settings**: The frontend includes a configuration panel where you can set:
+   - API URL
+   - API Key
+   - Tank ID
+   - Option to use mock data for testing
+
+2. **Fallback Mechanism**: If the external API is unavailable, the system falls back to cached data or generates mock data.
+
+3. **API Service Layer**: The backend includes a dedicated service layer that handles:
+   - API authentication
+   - Data fetching and caching
+   - Error handling
+   - Mock data generation for development and testing
+
+4. **Configuration File**: API settings can be configured in the `config.json` file in the backend directory.
 
 ## Machine Learning Implementation
 

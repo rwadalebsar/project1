@@ -1,4 +1,4 @@
-from fastapi import FastAPI, HTTPException, Query
+from fastapi import FastAPI, HTTPException, Query, BackgroundTasks
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from typing import List, Optional, Dict, Any
@@ -8,7 +8,13 @@ import numpy as np
 from sklearn.ensemble import IsolationForest
 import json
 import os
+import logging
 from fastapi.responses import JSONResponse
+from tank_api_service import TankAPIService
+
+# Configure logging
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+logger = logging.getLogger(__name__)
 
 app = FastAPI()
 
@@ -37,52 +43,11 @@ class AnomalyResult(BaseModel):
     is_anomaly: bool
     anomaly_score: float
 
-# File paths for data storage
-DATA_DIR = "data"
-os.makedirs(DATA_DIR, exist_ok=True)
-TANK_DATA_FILE = os.path.join(DATA_DIR, "tank_levels.json")
+# Initialize API service
+api_service = TankAPIService()
 
-# Initialize data storage
-if os.path.exists(TANK_DATA_FILE):
-    with open(TANK_DATA_FILE, 'r') as f:
-        try:
-            tank_data = json.load(f)
-            # Convert string timestamps back to datetime objects
-            for item in tank_data:
-                item['timestamp'] = datetime.fromisoformat(item['timestamp'])
-        except json.JSONDecodeError:
-            tank_data = []
-else:
-    # Generate some sample data if file doesn't exist
-    tank_data = []
-    now = datetime.now()
-    # Generate 12 months of hourly data
-    for i in range(365 * 24):
-        timestamp = now - timedelta(hours=i)
-        # Base level with some seasonal pattern (higher in summer, lower in winter)
-        base_level = 5.0 + 1.0 * np.sin(2 * np.pi * i / (365 * 24))
-        # Add some random noise
-        noise = np.random.normal(0, 0.2)
-        # Add some random anomalies (about 1%)
-        anomaly = 0
-        if np.random.random() < 0.01:
-            anomaly = np.random.choice([-2, 2]) * np.random.random()
-        level = max(0, min(10, base_level + noise + anomaly))
-        tank_data.append({
-            "timestamp": timestamp,
-            "level": level,
-            "tank_id": "tank1"
-        })
-
-    # Save the generated data
-    with open(TANK_DATA_FILE, 'w') as f:
-        # Convert datetime objects to ISO format strings for JSON serialization
-        serializable_data = []
-        for item in tank_data:
-            serializable_item = item.copy()
-            serializable_item['timestamp'] = item['timestamp'].isoformat()
-            serializable_data.append(serializable_item)
-        json.dump(serializable_data, f)
+# Load initial data
+tank_data = api_service.fetch_tank_levels()
 
 # Anomaly detection model
 def detect_anomalies(data, contamination=0.01):
@@ -135,48 +100,45 @@ def get_tank_levels(
     tank_id: Optional[str] = Query(None, description="Tank ID to filter by")
 ):
     """Get tank level data, optionally filtered by days and tank ID"""
-    # Convert to DataFrame for easier filtering
-    df = pd.DataFrame(tank_data)
+    global tank_data
 
-    # Filter by tank_id if provided
-    if tank_id:
-        df = df[df['tank_id'] == tank_id]
+    try:
+        # Fetch fresh data from API
+        tank_data = api_service.fetch_tank_levels(days)
 
-    # Filter by days if provided
-    if days:
-        cutoff_date = datetime.now() - timedelta(days=days)
-        df = df[df['timestamp'] >= cutoff_date]
+        # Convert to DataFrame for easier filtering
+        df = pd.DataFrame(tank_data)
 
-    # Sort by timestamp (newest first)
-    df = df.sort_values('timestamp', ascending=False)
+        # Filter by tank_id if provided
+        if tank_id:
+            df = df[df['tank_id'] == tank_id]
 
-    # Convert back to list of dictionaries
-    result = df.to_dict('records')
-    return result
+        # Sort by timestamp (newest first)
+        df = df.sort_values('timestamp', ascending=False)
+
+        # Convert back to list of dictionaries
+        result = df.to_dict('records')
+        return result
+    except Exception as e:
+        logger.error(f"Error getting tank levels: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error fetching tank levels: {str(e)}")
 
 @app.post("/api/tank-levels", response_model=TankLevel)
 def add_tank_level(tank_level: TankLevelCreate):
     """Add a new tank level reading"""
-    new_reading = {
-        "timestamp": datetime.now(),
-        "level": tank_level.level,
-        "tank_id": tank_level.tank_id
-    }
+    global tank_data
 
-    # Add to in-memory data
-    tank_data.append(new_reading)
+    try:
+        # Add reading via API service
+        new_reading = api_service.add_tank_level(tank_level.level)
 
-    # Save to file
-    with open(TANK_DATA_FILE, 'w') as f:
-        # Convert datetime objects to ISO format strings for JSON serialization
-        serializable_data = []
-        for item in tank_data:
-            serializable_item = item.copy()
-            serializable_item['timestamp'] = item['timestamp'].isoformat()
-            serializable_data.append(serializable_item)
-        json.dump(serializable_data, f)
+        # Refresh in-memory data
+        tank_data = api_service.fetch_tank_levels()
 
-    return new_reading
+        return new_reading
+    except Exception as e:
+        logger.error(f"Error adding tank level: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error adding tank level: {str(e)}")
 
 @app.get("/api/anomalies", response_model=List[AnomalyResult])
 def get_anomalies(
@@ -185,29 +147,34 @@ def get_anomalies(
     sensitivity: float = Query(0.01, description="Anomaly detection sensitivity (0.01-0.1)")
 ):
     """Detect anomalies in tank level data"""
-    # Convert to DataFrame for analysis
-    df = pd.DataFrame(tank_data)
+    global tank_data
 
-    # Filter by tank_id if provided
-    if tank_id:
-        df = df[df['tank_id'] == tank_id]
+    try:
+        # Ensure we have the latest data
+        tank_data = api_service.fetch_tank_levels(days)
 
-    # Filter by days
-    cutoff_date = datetime.now() - timedelta(days=days)
-    df = df[df['timestamp'] >= cutoff_date]
+        # Convert to DataFrame for analysis
+        df = pd.DataFrame(tank_data)
 
-    # Sort by timestamp
-    df = df.sort_values('timestamp')
+        # Filter by tank_id if provided
+        if tank_id:
+            df = df[df['tank_id'] == tank_id]
 
-    # Detect anomalies
-    result_df = detect_anomalies(df, contamination=sensitivity)
+        # Sort by timestamp
+        df = df.sort_values('timestamp')
 
-    # Filter to only return anomalies
-    anomalies_df = result_df[result_df['is_anomaly']]
+        # Detect anomalies
+        result_df = detect_anomalies(df, contamination=sensitivity)
 
-    # Convert back to list of dictionaries
-    result = anomalies_df.to_dict('records')
-    return result
+        # Filter to only return anomalies
+        anomalies_df = result_df[result_df['is_anomaly']]
+
+        # Convert back to list of dictionaries
+        result = anomalies_df.to_dict('records')
+        return result
+    except Exception as e:
+        logger.error(f"Error detecting anomalies: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error detecting anomalies: {str(e)}")
 
 @app.get("/api/stats")
 def get_stats(
@@ -215,38 +182,45 @@ def get_stats(
     tank_id: Optional[str] = Query(None, description="Tank ID to filter by")
 ):
     """Get statistics about tank levels"""
-    # Convert to DataFrame for analysis
-    df = pd.DataFrame(tank_data)
+    global tank_data
 
-    # Filter by tank_id if provided
-    if tank_id:
-        df = df[df['tank_id'] == tank_id]
+    try:
+        # Ensure we have the latest data
+        tank_data = api_service.fetch_tank_levels(days)
 
-    # Filter by days
-    cutoff_date = datetime.now() - timedelta(days=days)
-    df = df[df['timestamp'] >= cutoff_date]
+        # Convert to DataFrame for analysis
+        df = pd.DataFrame(tank_data)
 
-    # Calculate statistics
-    if len(df) == 0:
-        return {
-            "count": 0,
-            "min_level": None,
-            "max_level": None,
-            "avg_level": None,
-            "std_dev": None
+        # Filter by tank_id if provided
+        if tank_id:
+            df = df[df['tank_id'] == tank_id]
+
+        # Calculate statistics
+        if len(df) == 0:
+            return {
+                "count": 0,
+                "min_level": None,
+                "max_level": None,
+                "avg_level": None,
+                "std_dev": None,
+                "current_level": None,
+                "last_updated": None
+            }
+
+        stats = {
+            "count": len(df),
+            "min_level": float(df['level'].min()),
+            "max_level": float(df['level'].max()),
+            "avg_level": float(df['level'].mean()),
+            "std_dev": float(df['level'].std()),
+            "current_level": float(df.sort_values('timestamp', ascending=False).iloc[0]['level']),
+            "last_updated": df.sort_values('timestamp', ascending=False).iloc[0]['timestamp'].isoformat()
         }
 
-    stats = {
-        "count": len(df),
-        "min_level": float(df['level'].min()),
-        "max_level": float(df['level'].max()),
-        "avg_level": float(df['level'].mean()),
-        "std_dev": float(df['level'].std()),
-        "current_level": float(df.sort_values('timestamp', ascending=False).iloc[0]['level']),
-        "last_updated": df.sort_values('timestamp', ascending=False).iloc[0]['timestamp'].isoformat()
-    }
-
-    return stats
+        return stats
+    except Exception as e:
+        logger.error(f"Error getting stats: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error getting stats: {str(e)}")
 
 if __name__ == "__main__":
     import uvicorn
