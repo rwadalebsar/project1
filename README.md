@@ -10,13 +10,18 @@ A comprehensive dashboard for monitoring tank level sensors with data visualizat
 - Historical data tracking for up to 12 months
 - Detailed views for recent data (3 days)
 - Machine learning-based anomaly detection
-- Responsive design for all device sizes
+- Modern UI with responsive design for all device sizes
+- Dark mode sidebar with intuitive navigation
+- Card-based dashboard layout with clean typography
 - Configurable API settings with fallback to mock data
 
 ## Tech Stack
 - **Backend**: Python, FastAPI, Pandas, NumPy, scikit-learn
 - **Frontend**: React, Vite, Axios, Recharts
-- **Styling**: CSS with Grid Layout
+- **Styling**: Modern CSS with CSS Variables, Grid Layout, and Flexbox
+- **UI Design**: Custom-built component system with responsive design
+- **Typography**: Google Fonts (Inter) for clean, modern text
+- **Data Visualization**: Interactive charts with customized Recharts components
 - **Data Storage**: JSON-based file storage (easily replaceable with a database)
 
 ## Installation
@@ -47,11 +52,15 @@ npm install
 
 ## Running the Application
 
-### Option 1: Run both servers with a single script
+### Option 1: Using the Helper Script (Recommended)
 ```bash
 # Make sure you're in the project root directory
-chmod +x start-servers.sh
-./start-servers.sh
+# Run the backend server
+python3 run_backend.py
+
+# In a separate terminal, run the frontend server
+cd frontend
+npm run dev
 ```
 
 ### Option 2: Run servers separately
@@ -70,6 +79,17 @@ cd frontend
 npm run dev
 ```
 The frontend server will run at http://localhost:5173
+
+### Troubleshooting
+If you encounter issues with the backend server not starting properly:
+1. Make sure all dependencies are installed in the virtual environment
+2. Check that the `requests` package is installed: `pip install requests`
+3. Use the helper script `run_backend.py` which handles virtual environment activation
+
+If you see "Error fetching data: Network Error" in the frontend:
+1. Ensure the backend server is running at http://localhost:8000
+2. Check the backend server logs for any errors
+3. Verify that the API configuration in the frontend is set to use http://localhost:8000
 
 ## API Endpoints
 
