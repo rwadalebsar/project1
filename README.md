@@ -1,19 +1,21 @@
-# Todo App with Python Backend and React Frontend
+# Tank Level Monitoring Dashboard
 
 ## Description
-A simple Todo application with a Python (FastAPI) backend and React frontend. This project demonstrates how to create a full-stack application with a RESTful API backend and a modern React frontend.
+A comprehensive dashboard for monitoring tank level sensors with data visualization, API integration, and machine learning for anomaly detection. This project demonstrates how to create a full-stack application with a Python backend and React frontend.
 
 ## Features
 - RESTful API built with FastAPI
-- Modern React frontend with hooks
-- Create, read, update, and delete todo items
-- Mark tasks as completed
-- Responsive design
+- Interactive charts for visualizing tank level data
+- Historical data tracking for up to 12 months
+- Detailed views for recent data (3 days)
+- Machine learning-based anomaly detection
+- Responsive design for all device sizes
 
 ## Tech Stack
-- **Backend**: Python, FastAPI
-- **Frontend**: React, Vite, Axios
-- **Styling**: CSS
+- **Backend**: Python, FastAPI, Pandas, NumPy, scikit-learn
+- **Frontend**: React, Vite, Axios, Recharts
+- **Styling**: CSS with Grid Layout
+- **Data Storage**: JSON-based file storage (easily replaceable with a database)
 
 ## Installation
 
@@ -69,11 +71,32 @@ The frontend server will run at http://localhost:5173
 
 ## API Endpoints
 
-- `GET /api/items` - Get all todo items
-- `GET /api/items/{item_id}` - Get a specific todo item
-- `POST /api/items` - Create a new todo item
-- `PUT /api/items/{item_id}` - Update a todo item
-- `DELETE /api/items/{item_id}` - Delete a todo item
+- `GET /api/tank-levels` - Get tank level readings (with optional filtering by days and tank ID)
+- `POST /api/tank-levels` - Add a new tank level reading
+- `GET /api/anomalies` - Get detected anomalies in tank level data
+- `GET /api/stats` - Get statistics about tank levels
+
+## Machine Learning Implementation
+
+The system uses the Isolation Forest algorithm from scikit-learn for anomaly detection. This algorithm is particularly well-suited for detecting outliers in time series data:
+
+1. **How it works**: Isolation Forest isolates observations by randomly selecting a feature and then randomly selecting a split value between the maximum and minimum values of the selected feature.
+2. **Advantages**:
+   - Efficient with high-dimensional datasets
+   - Requires minimal configuration (primarily the contamination parameter)
+   - Works well with time series data
+   - Doesn't make assumptions about the data distribution
+
+3. **Implementation**: The backend processes tank level readings and identifies unusual patterns that might indicate sensor malfunctions, leaks, or other issues.
+
+## Future Enhancements
+
+1. **Database Integration**: Replace the JSON file storage with a proper database (PostgreSQL, MongoDB, etc.)
+2. **Real-time Updates**: Implement WebSockets for real-time dashboard updates
+3. **Advanced ML Models**: Implement more sophisticated anomaly detection algorithms
+4. **User Authentication**: Add user login and role-based access control
+5. **Multiple Tank Support**: Enhance the UI to better support multiple tanks
+6. **Mobile App**: Develop a companion mobile application for on-the-go monitoring
 
 ## License
 [MIT](https://choosealicense.com/licenses/mit/)
