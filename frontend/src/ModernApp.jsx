@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react'
 import axios from 'axios'
+import { useNavigate } from 'react-router-dom'
+import { useAuth } from './context/AuthContext'
 import './modern.css'
 import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend,
@@ -400,7 +402,7 @@ const ModernAnomaliesList = ({ anomalies }) => {
 };
 
 // Main App Component
-function ModernApp() {
+function ModernApp({ initialTab = 'dashboard' }) {
   const [tankLevels, setTankLevels] = useState([])
   const [recentLevels, setRecentLevels] = useState([])
   const [anomalies, setAnomalies] = useState([])
@@ -411,13 +413,17 @@ function ModernApp() {
   const [timeRange, setTimeRange] = useState(30) // Default to 30 days
   const [showConfig, setShowConfig] = useState(false)
   const [sidebarOpen, setSidebarOpen] = useState(true)
+  const [activeTab, setActiveTab] = useState(initialTab)
+
+  const { user, logout, hasSubscription } = useAuth()
+  const navigate = useNavigate()
 
   // API configuration state
   const [apiConfig, setApiConfig] = useState(() => {
     // Try to load from localStorage
     const savedConfig = localStorage.getItem('tankApiConfig')
     return savedConfig ? JSON.parse(savedConfig) : {
-      apiUrl: 'http://localhost:8000',
+      apiUrl: import.meta.env.VITE_API_URL || 'http://localhost:8000',
       apiKey: '',
       tankId: 'tank1',
       useMockData: true
@@ -524,20 +530,67 @@ function ModernApp() {
             <Icons.Tank /> <span>TankMonitor</span>
           </div>
         </div>
+
+        {user && (
+          <div className="user-info">
+            <div className="user-avatar">
+              {user.username.charAt(0).toUpperCase()}
+            </div>
+            <div className="user-details">
+              <div className="user-name">{user.full_name || user.username}</div>
+              <div className="user-plan">{user.subscription_tier.charAt(0).toUpperCase() + user.subscription_tier.slice(1)} Plan</div>
+            </div>
+          </div>
+        )}
+
         <div className="sidebar-nav">
-          <div className="nav-item active">
+          <div
+            className={`nav-item ${activeTab === 'dashboard' ? 'active' : ''}`}
+            onClick={() => {
+              setActiveTab('dashboard');
+              navigate('/dashboard');
+            }}
+          >
             <Icons.Dashboard /> <span>Dashboard</span>
           </div>
-          <div className="nav-item">
+
+          <div
+            className={`nav-item ${activeTab === 'analytics' ? 'active' : ''}`}
+            onClick={() => setActiveTab('analytics')}
+          >
             <Icons.Chart /> <span>Analytics</span>
           </div>
-          <div className="nav-item">
-            <Icons.Alert /> <span>Alerts</span>
+
+          <div
+            className={`nav-item ${activeTab === 'anomalies' ? 'active' : ''}`}
+            onClick={() => {
+              if (hasSubscription('basic')) {
+                setActiveTab('anomalies');
+                navigate('/anomalies');
+              } else {
+                navigate('/subscription', { state: { requiredTier: 'basic' } });
+              }
+            }}
+          >
+            <Icons.Alert /> <span>Anomalies</span>
+            {!hasSubscription('basic') && <span className="premium-feature">Premium</span>}
           </div>
-          <div className="nav-item" onClick={() => setShowConfig(true)}>
+
+          <div
+            className={`nav-item ${activeTab === 'settings' ? 'active' : ''}`}
+            onClick={() => setShowConfig(true)}
+          >
             <Icons.Settings /> <span>Settings</span>
           </div>
+
+          <div
+            className={`nav-item ${activeTab === 'subscription' ? 'active' : ''}`}
+            onClick={() => navigate('/subscription')}
+          >
+            <Icons.Settings /> <span>Subscription</span>
+          </div>
         </div>
+
         <div className="sidebar-footer">
           <div className="nav-item" onClick={() => setSidebarOpen(!sidebarOpen)}>
             {sidebarOpen ? (
@@ -547,6 +600,13 @@ function ModernApp() {
             ) : (
               <Icons.Menu />
             )}
+          </div>
+
+          <div className="nav-item logout-item" onClick={logout}>
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+            </svg>
+            <span>Logout</span>
           </div>
         </div>
       </div>
