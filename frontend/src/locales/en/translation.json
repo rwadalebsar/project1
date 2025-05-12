@@ -1,0 +1,98 @@
+{
+  "app": {
+    "title": "Tank Level Monitoring",
+    "loading": "Loading dashboard data..."
+  },
+  "auth": {
+    "login": "Login",
+    "register": "Register",
+    "logout": "Logout",
+    "loginTitle": "Login to Tank Monitor",
+    "loginSubtitle": "Enter your credentials to access your dashboard",
+    "registerTitle": "Create an Account",
+    "registerSubtitle": "Sign up to start monitoring your tanks",
+    "username": "Username",
+    "password": "Password",
+    "email": "Email",
+    "confirmPassword": "Confirm Password",
+    "fullName": "Full Name",
+    "company": "Company",
+    "loginButton": "Login",
+    "registerButton": "Register",
+    "loggingIn": "Logging in...",
+    "creatingAccount": "Creating Account...",
+    "noAccount": "Don't have an account?",
+    "haveAccount": "Already have an account?",
+    "loginFailed": "Login failed. Please check your credentials."
+  },
+  "dashboard": {
+    "dashboard": "Dashboard",
+    "analytics": "Analytics",
+    "anomalies": "Anomalies",
+    "settings": "Settings",
+    "subscription": "Subscription",
+    "collapseMenu": "Collapse Menu",
+    "timeRange": "Time Range",
+    "refresh": "Refresh",
+    "apiSettings": "API Settings",
+    "days7": "Last 7 days",
+    "days30": "Last 30 days",
+    "months3": "Last 3 months",
+    "months6": "Last 6 months",
+    "months12": "Last 12 months",
+    "premium": "Premium"
+  },
+  "tanks": {
+    "addReading": "Add Reading",
+    "currentLevel": "Current Level",
+    "addButton": "Add",
+    "recentLevels": "Recent Tank Levels (Last 3 Days)",
+    "historicalLevels": "Historical Tank Levels",
+    "level": "Level",
+    "minLevel": "Min Level",
+    "maxLevel": "Max Level",
+    "avgLevel": "Avg Level",
+    "lastUpdated": "Last Updated"
+  },
+  "anomalies": {
+    "noAnomalies": "No Anomalies Detected",
+    "noAnomaliesDesc": "No anomalies were detected in the selected time range.",
+    "anomalyDetection": "Anomaly Detection",
+    "upgradeRequired": "Anomaly Detection Requires Upgrade",
+    "upgradeDesc": "Anomaly detection is available with Basic and Premium subscription plans.",
+    "upgradeButton": "Upgrade Subscription",
+    "anomalyChart": "Anomaly Detection Chart",
+    "anomalyList": "Detected Anomalies",
+    "timestamp": "Timestamp",
+    "tankId": "Tank ID",
+    "confidence": "Confidence"
+  },
+  "subscription": {
+    "choosePlan": "Choose Your Subscription Plan",
+    "planDesc": "Select the plan that best fits your monitoring needs",
+    "upgradeNotice": "You need at least a {{tier}} subscription to access this feature.",
+    "monthly": "Monthly",
+    "yearly": "Yearly",
+    "save": "Save 15%",
+    "currentPlan": "Current Plan",
+    "subscribe": "Subscribe",
+    "upgrade": "Upgrade",
+    "features": {
+      "tanks": "Up to {{count}} tanks",
+      "history": "{{count}} days of history",
+      "anomalyDetection": "Anomaly detection",
+      "prioritySupport": "Priority support",
+      "customReports": "Custom reports"
+    },
+    "tiers": {
+      "free": "Free",
+      "basic": "Basic",
+      "premium": "Premium"
+    }
+  },
+  "errors": {
+    "fetchError": "Error fetching data: {{message}}. Check your API configuration.",
+    "addError": "Error adding tank level reading: {{message}}"
+  },
+  "direction": "ltr"
+}

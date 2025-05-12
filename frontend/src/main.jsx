@@ -1,8 +1,9 @@
-import { StrictMode } from 'react'
+import { StrictMode, Suspense } from 'react'
 import { createRoot } from 'react-dom/client'
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import './index.css'
 import './modern.css'
+import './i18n' // Import i18n configuration
 import ModernApp from './ModernApp.jsx'
 import Login from './components/auth/Login.jsx'
 import Register from './components/auth/Register.jsx'
@@ -62,6 +63,8 @@ const App = () => {
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
-    <App />
+    <Suspense fallback={<div>Loading...</div>}>
+      <App />
+    </Suspense>
   </StrictMode>,
 )

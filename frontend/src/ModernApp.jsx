@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react'
 import axios from 'axios'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from './context/AuthContext'
+import { useTranslation } from 'react-i18next'
+import LanguageSwitcher from './components/common/LanguageSwitcher'
 import './modern.css'
 import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend,
@@ -417,6 +419,7 @@ function ModernApp({ initialTab = 'dashboard' }) {
 
   const { user, logout, hasSubscription } = useAuth()
   const navigate = useNavigate()
+  const { t } = useTranslation()
 
   // API configuration state
   const [apiConfig, setApiConfig] = useState(() => {
@@ -467,11 +470,22 @@ function ModernApp({ initialTab = 'dashboard' }) {
       setRecentLevels(recentData)
 
       // Fetch anomalies
-      const anomaliesResponse = await axios.get(
-        `${apiConfig.apiUrl}/api/anomalies?days=${timeRange}&tank_id=${apiConfig.tankId}`,
-        { headers }
-      )
-      setAnomalies(anomaliesResponse.data)
+      try {
+        const anomaliesResponse = await axios.get(
+          `${apiConfig.apiUrl}/api/anomalies?days=${timeRange}&tank_id=${apiConfig.tankId}`,
+          { headers }
+        )
+        setAnomalies(anomaliesResponse.data)
+      } catch (anomalyError) {
+        // If it's a 403 error, it means the user doesn't have access to anomaly detection
+        if (anomalyError.response && anomalyError.response.status === 403) {
+          console.log('Anomaly detection requires a higher subscription tier')
+          setAnomalies([]) // Set empty anomalies array
+        } else {
+          // For other errors, rethrow to be caught by the outer catch block
+          throw anomalyError
+        }
+      }
 
       // Fetch stats
       const statsResponse = await axios.get(
@@ -482,7 +496,7 @@ function ModernApp({ initialTab = 'dashboard' }) {
 
       setError(null)
     } catch (err) {
-      setError(`Error fetching data: ${err.message}. Check your API configuration.`)
+      setError(t('errors.fetchError', { message: err.message }))
       console.error('Error fetching data:', err)
     } finally {
       setLoading(false)
@@ -506,7 +520,7 @@ function ModernApp({ initialTab = 'dashboard' }) {
       // Reset form
       setNewLevel(5.0)
     } catch (err) {
-      setError(`Error adding tank level reading: ${err.message}`)
+      setError(t('errors.addError', { message: err.message }))
       console.error('Error adding reading:', err)
     }
   }
@@ -551,14 +565,14 @@ function ModernApp({ initialTab = 'dashboard' }) {
               navigate('/dashboard');
             }}
           >
-            <Icons.Dashboard /> <span>Dashboard</span>
+            <Icons.Dashboard /> <span>{t('dashboard.dashboard')}</span>
           </div>
 
           <div
             className={`nav-item ${activeTab === 'analytics' ? 'active' : ''}`}
             onClick={() => setActiveTab('analytics')}
           >
-            <Icons.Chart /> <span>Analytics</span>
+            <Icons.Chart /> <span>{t('dashboard.analytics')}</span>
           </div>
 
           <div
@@ -572,22 +586,22 @@ function ModernApp({ initialTab = 'dashboard' }) {
               }
             }}
           >
-            <Icons.Alert /> <span>Anomalies</span>
-            {!hasSubscription('basic') && <span className="premium-feature">Premium</span>}
+            <Icons.Alert /> <span>{t('dashboard.anomalies')}</span>
+            {!hasSubscription('basic') && <span className="premium-feature">{t('dashboard.premium')}</span>}
           </div>
 
           <div
             className={`nav-item ${activeTab === 'settings' ? 'active' : ''}`}
             onClick={() => setShowConfig(true)}
           >
-            <Icons.Settings /> <span>Settings</span>
+            <Icons.Settings /> <span>{t('dashboard.settings')}</span>
           </div>
 
           <div
             className={`nav-item ${activeTab === 'subscription' ? 'active' : ''}`}
             onClick={() => navigate('/subscription')}
           >
-            <Icons.Settings /> <span>Subscription</span>
+            <Icons.Settings /> <span>{t('dashboard.subscription')}</span>
           </div>
         </div>
 
@@ -595,7 +609,7 @@ function ModernApp({ initialTab = 'dashboard' }) {
           <div className="nav-item" onClick={() => setSidebarOpen(!sidebarOpen)}>
             {sidebarOpen ? (
               <>
-                <Icons.Menu /> <span>Collapse Menu</span>
+                <Icons.Menu /> <span>{t('dashboard.collapseMenu')}</span>
               </>
             ) : (
               <Icons.Menu />
@@ -606,7 +620,7 @@ function ModernApp({ initialTab = 'dashboard' }) {
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
             </svg>
-            <span>Logout</span>
+            <span>{t('auth.logout')}</span>
           </div>
         </div>
       </div>
@@ -622,30 +636,31 @@ function ModernApp({ initialTab = 'dashboard' }) {
             >
               {sidebarOpen ? <Icons.Close /> : <Icons.Menu />}
             </button>
-            <h1 className="page-title">Tank Level Monitoring</h1>
+            <h1 className="page-title">{t('app.title')}</h1>
           </div>
           <div className="header-actions">
             <div className="form-group" style={{ margin: 0, display: 'flex', alignItems: 'center', gap: '10px' }}>
-              <label className="form-label" style={{ margin: 0 }}>Time Range:</label>
+              <label className="form-label" style={{ margin: 0 }}>{t('dashboard.timeRange')}:</label>
               <select
                 className="form-select"
                 value={timeRange}
                 onChange={handleTimeRangeChange}
                 style={{ width: 'auto' }}
               >
-                <option value={7}>Last 7 days</option>
-                <option value={30}>Last 30 days</option>
-                <option value={90}>Last 3 months</option>
-                <option value={180}>Last 6 months</option>
-                <option value={365}>Last 12 months</option>
+                <option value={7}>{t('dashboard.days7')}</option>
+                <option value={30}>{t('dashboard.days30')}</option>
+                <option value={90}>{t('dashboard.months3')}</option>
+                <option value={180}>{t('dashboard.months6')}</option>
+                <option value={365}>{t('dashboard.months12')}</option>
               </select>
             </div>
             <button className="btn btn-primary" onClick={fetchData}>
-              <Icons.Refresh /> <span className="btn-text">Refresh</span>
+              <Icons.Refresh /> <span className="btn-text">{t('dashboard.refresh')}</span>
             </button>
             <button className="btn btn-secondary" onClick={() => setShowConfig(true)}>
-              <Icons.Settings /> <span className="btn-text">API Settings</span>
+              <Icons.Settings /> <span className="btn-text">{t('dashboard.apiSettings')}</span>
             </button>
+            <LanguageSwitcher />
           </div>
         </div>
 
@@ -682,7 +697,7 @@ function ModernApp({ initialTab = 'dashboard' }) {
             fontSize: '1.2rem',
             color: 'var(--gray-500)'
           }}>
-            Loading dashboard data...
+            {t('app.loading')}
           </div>
         ) : (
           <>
@@ -701,7 +716,7 @@ function ModernApp({ initialTab = 'dashboard' }) {
               <div className="col-span-8">
                 <ModernTankLevelChart
                   data={recentLevels}
-                  title="Recent Tank Levels (Last 3 Days)"
+                  title={t('tanks.recentLevels')}
                   timeFormat={{ month: 'short', day: 'numeric', hour: '2-digit' }}
                   color="#4cc9f0"
                 />
@@ -712,7 +727,7 @@ function ModernApp({ initialTab = 'dashboard' }) {
               <div className="col-span-12">
                 <ModernTankLevelChart
                   data={tankLevels}
-                  title={`Historical Tank Levels (${timeRange} Days)`}
+                  title={`${t('tanks.historicalLevels')} (${timeRange} ${t('dashboard.days30').split(' ')[1]})`}
                   timeFormat={{ month: 'short', day: 'numeric' }}
                   color="#4361ee"
                 />
@@ -721,7 +736,24 @@ function ModernApp({ initialTab = 'dashboard' }) {
 
             {/* Anomalies Section */}
             <div className="dashboard-grid col-span-12">
-              {anomalies.length > 0 ? (
+              {!hasSubscription('basic') ? (
+                <div className="col-span-12">
+                  <div className="card" style={{ textAlign: 'center', padding: '40px 20px' }}>
+                    <div style={{ fontSize: '1.2rem', fontWeight: '600', color: 'var(--gray-700)', marginBottom: '10px' }}>
+                      {t('anomalies.upgradeRequired')}
+                    </div>
+                    <p style={{ color: 'var(--gray-500)', marginBottom: '20px' }}>
+                      {t('anomalies.upgradeDesc')}
+                    </p>
+                    <button
+                      className="btn btn-primary"
+                      onClick={() => navigate('/subscription', { state: { requiredTier: 'basic' } })}
+                    >
+                      {t('anomalies.upgradeButton')}
+                    </button>
+                  </div>
+                </div>
+              ) : anomalies.length > 0 ? (
                 <>
                   <div className="col-span-6">
                     <ModernAnomaliesChart data={tankLevels} anomalies={anomalies} />
@@ -734,10 +766,10 @@ function ModernApp({ initialTab = 'dashboard' }) {
                 <div className="col-span-12">
                   <div className="card" style={{ textAlign: 'center', padding: '40px 20px' }}>
                     <div style={{ fontSize: '1.2rem', fontWeight: '600', color: 'var(--gray-700)', marginBottom: '10px' }}>
-                      No Anomalies Detected
+                      {t('anomalies.noAnomalies')}
                     </div>
                     <p style={{ color: 'var(--gray-500)' }}>
-                      No anomalies were detected in the selected time range.
+                      {t('anomalies.noAnomaliesDesc')}
                     </p>
                   </div>
                 </div>

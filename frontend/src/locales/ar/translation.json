@@ -1,0 +1,98 @@
+{
+  "app": {
+    "title": "مراقبة مستوى الخزان",
+    "loading": "جاري تحميل بيانات لوحة المعلومات..."
+  },
+  "auth": {
+    "login": "تسجيل الدخول",
+    "register": "إنشاء حساب",
+    "logout": "تسجيل الخروج",
+    "loginTitle": "تسجيل الدخول إلى مراقب الخزان",
+    "loginSubtitle": "أدخل بيانات الاعتماد الخاصة بك للوصول إلى لوحة المعلومات",
+    "registerTitle": "إنشاء حساب",
+    "registerSubtitle": "سجل للبدء في مراقبة خزاناتك",
+    "username": "اسم المستخدم",
+    "password": "كلمة المرور",
+    "email": "البريد الإلكتروني",
+    "confirmPassword": "تأكيد كلمة المرور",
+    "fullName": "الاسم الكامل",
+    "company": "الشركة",
+    "loginButton": "تسجيل الدخول",
+    "registerButton": "إنشاء حساب",
+    "loggingIn": "جاري تسجيل الدخول...",
+    "creatingAccount": "جاري إنشاء الحساب...",
+    "noAccount": "ليس لديك حساب؟",
+    "haveAccount": "لديك حساب بالفعل؟",
+    "loginFailed": "فشل تسجيل الدخول. يرجى التحقق من بيانات الاعتماد الخاصة بك."
+  },
+  "dashboard": {
+    "dashboard": "لوحة المعلومات",
+    "analytics": "التحليلات",
+    "anomalies": "الشذوذات",
+    "settings": "الإعدادات",
+    "subscription": "الاشتراك",
+    "collapseMenu": "طي القائمة",
+    "timeRange": "النطاق الزمني",
+    "refresh": "تحديث",
+    "apiSettings": "إعدادات API",
+    "days7": "آخر 7 أيام",
+    "days30": "آخر 30 يوم",
+    "months3": "آخر 3 أشهر",
+    "months6": "آخر 6 أشهر",
+    "months12": "آخر 12 شهر",
+    "premium": "مميز"
+  },
+  "tanks": {
+    "addReading": "إضافة قراءة",
+    "currentLevel": "المستوى الحالي",
+    "addButton": "إضافة",
+    "recentLevels": "مستويات الخزان الأخيرة (آخر 3 أيام)",
+    "historicalLevels": "مستويات الخزان التاريخية",
+    "level": "المستوى",
+    "minLevel": "الحد الأدنى للمستوى",
+    "maxLevel": "الحد الأقصى للمستوى",
+    "avgLevel": "متوسط المستوى",
+    "lastUpdated": "آخر تحديث"
+  },
+  "anomalies": {
+    "noAnomalies": "لم يتم اكتشاف شذوذات",
+    "noAnomaliesDesc": "لم يتم اكتشاف شذوذات في النطاق الزمني المحدد.",
+    "anomalyDetection": "اكتشاف الشذوذات",
+    "upgradeRequired": "يتطلب اكتشاف الشذوذات ترقية",
+    "upgradeDesc": "اكتشاف الشذوذات متاح مع خطط الاشتراك الأساسية والمميزة.",
+    "upgradeButton": "ترقية الاشتراك",
+    "anomalyChart": "مخطط اكتشاف الشذوذات",
+    "anomalyList": "الشذوذات المكتشفة",
+    "timestamp": "الطابع الزمني",
+    "tankId": "معرف الخزان",
+    "confidence": "الثقة"
+  },
+  "subscription": {
+    "choosePlan": "اختر خطة الاشتراك الخاصة بك",
+    "planDesc": "حدد الخطة التي تناسب احتياجات المراقبة الخاصة بك",
+    "upgradeNotice": "أنت بحاجة إلى اشتراك {{tier}} على الأقل للوصول إلى هذه الميزة.",
+    "monthly": "شهري",
+    "yearly": "سنوي",
+    "save": "وفر 15%",
+    "currentPlan": "الخطة الحالية",
+    "subscribe": "اشترك",
+    "upgrade": "ترقية",
+    "features": {
+      "tanks": "ما يصل إلى {{count}} خزان",
+      "history": "{{count}} يوم من التاريخ",
+      "anomalyDetection": "اكتشاف الشذوذات",
+      "prioritySupport": "دعم ذو أولوية",
+      "customReports": "تقارير مخصصة"
+    },
+    "tiers": {
+      "free": "مجاني",
+      "basic": "أساسي",
+      "premium": "مميز"
+    }
+  },
+  "errors": {
+    "fetchError": "خطأ في جلب البيانات: {{message}}. تحقق من تكوين API الخاص بك.",
+    "addError": "خطأ في إضافة قراءة مستوى الخزان: {{message}}"
+  },
+  "direction": "rtl"
+}

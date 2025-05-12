@@ -1,14 +1,18 @@
 import { useState } from 'react';
 import axios from 'axios';
 import { useNavigate, Link } from 'react-router-dom';
+import { useAuth } from '../../context/AuthContext';
+import { useTranslation } from 'react-i18next';
 import './Auth.css';
 
-const Login = ({ onLogin }) => {
+const Login = () => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const { login } = useAuth();
+  const { t } = useTranslation();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -21,18 +25,14 @@ const Login = ({ onLogin }) => {
         password
       });
 
-      // Store token and user info in localStorage
-      localStorage.setItem('token', response.data.access_token);
-      localStorage.setItem('user', JSON.stringify(response.data.user));
-      
-      // Call the onLogin callback to update app state
-      onLogin(response.data.user, response.data.access_token);
-      
+      // Use the login function from AuthContext
+      login(response.data.user, response.data.access_token);
+
       // Redirect to dashboard
       navigate('/dashboard');
     } catch (err) {
       console.error('Login error:', err);
-      setError(err.response?.data?.detail || 'Login failed. Please check your credentials.');
+      setError(err.response?.data?.detail || t('auth.loginFailed'));
     } finally {
       setLoading(false);
     }
@@ -42,15 +42,15 @@ const Login = ({ onLogin }) => {
     <div className="auth-container">
       <div className="auth-card">
         <div className="auth-header">
-          <h2>Login to Tank Monitor</h2>
-          <p>Enter your credentials to access your dashboard</p>
+          <h2>{t('auth.loginTitle')}</h2>
+          <p>{t('auth.loginSubtitle')}</p>
         </div>
 
         {error && <div className="auth-error">{error}</div>}
 
         <form onSubmit={handleSubmit} className="auth-form">
           <div className="form-group">
-            <label htmlFor="username">Username</label>
+            <label htmlFor="username">{t('auth.username')}</label>
             <input
               type="text"
               id="username"
@@ -63,7 +63,7 @@ const Login = ({ onLogin }) => {
           </div>
 
           <div className="form-group">
-            <label htmlFor="password">Password</label>
+            <label htmlFor="password">{t('auth.password')}</label>
             <input
               type="password"
               id="password"
@@ -75,17 +75,17 @@ const Login = ({ onLogin }) => {
             />
           </div>
 
-          <button 
-            type="submit" 
-            className="auth-button" 
+          <button
+            type="submit"
+            className="auth-button"
             disabled={loading}
           >
-            {loading ? 'Logging in...' : 'Login'}
+            {loading ? t('auth.loggingIn') : t('auth.loginButton')}
           </button>
         </form>
 
         <div className="auth-footer">
-          <p>Don't have an account? <Link to="/register">Register</Link></p>
+          <p>{t('auth.noAccount')} <Link to="/register">{t('auth.register')}</Link></p>
         </div>
       </div>
     </div>
