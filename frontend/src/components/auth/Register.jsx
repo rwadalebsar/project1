@@ -101,8 +101,9 @@ const Register = () => {
   );
 
   return (
-    <div className="modern-auth-container">
-      {/* Left side - Register Form */}
+    <div className="auth-page-wrapper">
+      <div className="modern-auth-container">
+        {/* Left side - Register Form */}
       <div className="auth-form-container">
         <div className="auth-language-switcher">
           <LanguageSwitcher />
@@ -259,6 +260,7 @@ const Register = () => {
             </div>
           </div>
         </div>
+      </div>
       </div>
     </div>
   );

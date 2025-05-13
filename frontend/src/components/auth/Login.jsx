@@ -76,8 +76,9 @@ const Login = () => {
   );
 
   return (
-    <div className="modern-auth-container">
-      {/* Left side - Login Form */}
+    <div className="auth-page-wrapper">
+      <div className="modern-auth-container">
+        {/* Left side - Login Form */}
       <div className="auth-form-container">
         <div className="auth-language-switcher">
           <LanguageSwitcher />
@@ -178,6 +179,7 @@ const Login = () => {
             </div>
           </div>
         </div>
+      </div>
       </div>
     </div>
   );

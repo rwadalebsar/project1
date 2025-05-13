@@ -1,22 +1,22 @@
-/* Reset body and html to ensure full screen usage */
-html, body, #root {
+/* Reset for auth pages only */
+.auth-page-wrapper {
   margin: 0;
   padding: 0;
   height: 100%;
   width: 100%;
-  overflow: hidden;
-}
-
-.modern-auth-container {
-  display: flex;
-  height: 100vh;
-  width: 100vw;
-  overflow: hidden;
   position: fixed;
   top: 0;
   left: 0;
   right: 0;
   bottom: 0;
+  overflow: hidden;
+}
+
+.modern-auth-container {
+  display: flex;
+  height: 100%;
+  width: 100%;
+  overflow: hidden;
 }
 
 /* Left side - Login Form */
@@ -405,10 +405,15 @@ html, body, #root {
 
 /* Responsive styles */
 @media (max-width: 1024px) {
+  .auth-page-wrapper {
+    position: absolute;
+    overflow-y: auto;
+  }
+
   .modern-auth-container {
     flex-direction: column;
     height: auto;
-    position: relative;
+    min-height: 100%;
   }
 
   .auth-form-container,
