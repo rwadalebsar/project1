@@ -79,107 +79,107 @@ const Login = () => {
     <div className="auth-page-wrapper">
       <div className="modern-auth-container">
         {/* Left side - Login Form */}
-      <div className="auth-form-container">
-        <div className="auth-language-switcher">
-          <LanguageSwitcher />
-        </div>
-
-        <div className="auth-logo-container">
-          <img src={logoSvg} alt="Tank Monitor Logo" className="auth-logo" />
-          <div className="auth-logo-text">TankMonitor</div>
-        </div>
-
-        <div className="modern-auth-header">
-          <h1>{t('auth.loginTitle')}</h1>
-          <p>{t('auth.loginSubtitle')}</p>
-        </div>
-
-        {error && <div className="modern-auth-error">{error}</div>}
-
-        <form onSubmit={handleSubmit} className="modern-auth-form">
-          <div className="modern-form-group">
-            <label htmlFor="username">{t('auth.username')}</label>
-            <input
-              type="text"
-              id="username"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
-              required
-              className="modern-form-control"
-              placeholder="Enter your username"
-            />
+        <div className="auth-form-container">
+          <div className="auth-language-switcher">
+            <LanguageSwitcher />
           </div>
 
-          <div className="modern-form-group">
-            <label htmlFor="password">{t('auth.password')}</label>
-            <input
-              type="password"
-              id="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              className="modern-form-control"
-              placeholder="Enter your password"
-            />
+          <div className="auth-logo-container">
+            <img src={logoSvg} alt="Tank Monitor Logo" className="auth-logo" />
+            <div className="auth-logo-text">TankMonitor</div>
           </div>
 
-          <button
-            type="submit"
-            className="modern-auth-button"
-            disabled={loading}
-          >
-            {loading ? t('auth.loggingIn') : t('auth.loginButton')}
-          </button>
-        </form>
-
-        <div className="modern-auth-footer">
-          <p>{t('auth.noAccount')} <Link to="/register">{t('auth.register')}</Link></p>
-        </div>
-      </div>
-
-      {/* Right side - Features Showcase */}
-      <div className="auth-features-container">
-        <div className="features-content">
-          <div className="features-header">
-            <h2>{t('auth.featuresTitle')}</h2>
-            <p>{t('auth.featuresSubtitle')}</p>
+          <div className="modern-auth-header">
+            <h1>{t('auth.loginTitle')}</h1>
+            <p>{t('auth.loginSubtitle')}</p>
           </div>
 
-          <div className="feature-list">
-            <div className="feature-item">
-              <FeatureIcon icon={<DashboardIcon />} />
-              <div className="feature-text">
-                <h3>{t('auth.features.realtime.title')}</h3>
-                <p>{t('auth.features.realtime.description')}</p>
-              </div>
+          {error && <div className="modern-auth-error">{error}</div>}
+
+          <form onSubmit={handleSubmit} className="modern-auth-form">
+            <div className="modern-form-group">
+              <label htmlFor="username">{t('auth.username')}</label>
+              <input
+                type="text"
+                id="username"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                required
+                className="modern-form-control"
+                placeholder="Enter your username"
+              />
             </div>
 
-            <div className="feature-item">
-              <FeatureIcon icon={<AnalyticsIcon />} />
-              <div className="feature-text">
-                <h3>{t('auth.features.analytics.title')}</h3>
-                <p>{t('auth.features.analytics.description')}</p>
-              </div>
+            <div className="modern-form-group">
+              <label htmlFor="password">{t('auth.password')}</label>
+              <input
+                type="password"
+                id="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+                className="modern-form-control"
+                placeholder="Enter your password"
+              />
             </div>
 
-            <div className="feature-item">
-              <FeatureIcon icon={<AnomalyIcon />} />
-              <div className="feature-text">
-                <h3>{t('auth.features.anomaly.title')}</h3>
-                <p>{t('auth.features.anomaly.description')}</p>
-              </div>
-            </div>
+            <button
+              type="submit"
+              className="modern-auth-button"
+              disabled={loading}
+            >
+              {loading ? t('auth.loggingIn') : t('auth.loginButton')}
+            </button>
+          </form>
 
-            <div className="feature-item">
-              <FeatureIcon icon={<MultilingualIcon />} />
-              <div className="feature-text">
-                <h3>{t('auth.features.multilingual.title')}</h3>
-                <p>{t('auth.features.multilingual.description')}</p>
-              </div>
-            </div>
+          <div className="modern-auth-footer">
+            <p>{t('auth.noAccount')} <Link to="/register">{t('auth.register')}</Link></p>
           </div>
         </div>
-      </div>
+
+        {/* Right side - Features Showcase */}
+        <div className="auth-features-container">
+          <div className="features-content">
+            <div className="features-header">
+              <h2>{t('auth.featuresTitle')}</h2>
+              <p>{t('auth.featuresSubtitle')}</p>
+            </div>
+
+            <div className="feature-list">
+              <div className="feature-item">
+                <FeatureIcon icon={<DashboardIcon />} />
+                <div className="feature-text">
+                  <h3>{t('auth.features.realtime.title')}</h3>
+                  <p>{t('auth.features.realtime.description')}</p>
+                </div>
+              </div>
+
+              <div className="feature-item">
+                <FeatureIcon icon={<AnalyticsIcon />} />
+                <div className="feature-text">
+                  <h3>{t('auth.features.analytics.title')}</h3>
+                  <p>{t('auth.features.analytics.description')}</p>
+                </div>
+              </div>
+
+              <div className="feature-item">
+                <FeatureIcon icon={<AnomalyIcon />} />
+                <div className="feature-text">
+                  <h3>{t('auth.features.anomaly.title')}</h3>
+                  <p>{t('auth.features.anomaly.description')}</p>
+                </div>
+              </div>
+
+              <div className="feature-item">
+                <FeatureIcon icon={<MultilingualIcon />} />
+                <div className="feature-text">
+                  <h3>{t('auth.features.multilingual.title')}</h3>
+                  <p>{t('auth.features.multilingual.description')}</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );
