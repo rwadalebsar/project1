@@ -423,7 +423,18 @@ function ModernApp({ initialTab = 'dashboard' }) {
 
   const { user, logout, hasSubscription } = useAuth()
   const navigate = useNavigate()
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
+
+  // Force layout update when language changes
+  useEffect(() => {
+    // This will force a re-render when language changes
+    const dir = i18n.language === 'ar' ? 'rtl' : 'ltr'
+    document.documentElement.dir = dir
+    document.documentElement.lang = i18n.language
+
+    // Force a layout recalculation
+    window.dispatchEvent(new Event('resize'))
+  }, [i18n.language])
 
   // API configuration state
   const [apiConfig, setApiConfig] = useState(() => {
