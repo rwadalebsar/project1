@@ -641,48 +641,49 @@ function ModernApp({ initialTab = 'dashboard' }) {
 
       {/* Main Content */}
       <div className="main-content">
-        {/* Header */}
-        <div className="dashboard-header">
-          <div className="header-left">
-            <button
-              className="mobile-menu-toggle btn btn-icon"
-              onClick={() => setSidebarOpen(!sidebarOpen)}
-            >
-              {sidebarOpen ? <Icons.Close /> : <Icons.Menu />}
-            </button>
-            <h1 className="page-title">
-              {activeTab === 'user-anomalies'
-                ? t('dashboard.reportedAnomalies')
-                : t('app.title')}
-            </h1>
+        <div style={{ paddingTop: '20px' }}>
+          {/* Header */}
+          <div className="dashboard-header">
+            <div className="header-left">
+              <button
+                className="mobile-menu-toggle btn btn-icon"
+                onClick={() => setSidebarOpen(!sidebarOpen)}
+              >
+                {sidebarOpen ? <Icons.Close /> : <Icons.Menu />}
+              </button>
+              <h1 className="page-title">
+                {activeTab === 'user-anomalies'
+                  ? t('dashboard.reportedAnomalies')
+                  : t('app.title')}
+              </h1>
+            </div>
+            <div className="header-actions">
+              {activeTab !== 'user-anomalies' && (
+                <div className="form-group" style={{ margin: 0, display: 'flex', alignItems: 'center', gap: '10px' }}>
+                  <label className="form-label" style={{ margin: 0 }}>{t('dashboard.timeRange')}:</label>
+                  <select
+                    className="form-select"
+                    value={timeRange}
+                    onChange={handleTimeRangeChange}
+                    style={{ width: 'auto' }}
+                  >
+                    <option value={7}>{t('dashboard.days7')}</option>
+                    <option value={30}>{t('dashboard.days30')}</option>
+                    <option value={90}>{t('dashboard.months3')}</option>
+                    <option value={180}>{t('dashboard.months6')}</option>
+                    <option value={365}>{t('dashboard.months12')}</option>
+                  </select>
+                </div>
+              )}
+              <button className="btn btn-primary" onClick={fetchData}>
+                <Icons.Refresh /> <span className="btn-text">{t('dashboard.refresh')}</span>
+              </button>
+              <button className="btn btn-secondary" onClick={() => setShowConfig(true)}>
+                <Icons.Settings /> <span className="btn-text">{t('dashboard.apiSettings')}</span>
+              </button>
+              <LanguageSwitcher />
+            </div>
           </div>
-          <div className="header-actions">
-            {activeTab !== 'user-anomalies' && (
-              <div className="form-group" style={{ margin: 0, display: 'flex', alignItems: 'center', gap: '10px' }}>
-                <label className="form-label" style={{ margin: 0 }}>{t('dashboard.timeRange')}:</label>
-                <select
-                  className="form-select"
-                  value={timeRange}
-                  onChange={handleTimeRangeChange}
-                  style={{ width: 'auto' }}
-                >
-                  <option value={7}>{t('dashboard.days7')}</option>
-                  <option value={30}>{t('dashboard.days30')}</option>
-                  <option value={90}>{t('dashboard.months3')}</option>
-                  <option value={180}>{t('dashboard.months6')}</option>
-                  <option value={365}>{t('dashboard.months12')}</option>
-                </select>
-              </div>
-            )}
-            <button className="btn btn-primary" onClick={fetchData}>
-              <Icons.Refresh /> <span className="btn-text">{t('dashboard.refresh')}</span>
-            </button>
-            <button className="btn btn-secondary" onClick={() => setShowConfig(true)}>
-              <Icons.Settings /> <span className="btn-text">{t('dashboard.apiSettings')}</span>
-            </button>
-            <LanguageSwitcher />
-          </div>
-        </div>
 
         {/* API Configuration Modal */}
         <ModernApiConfig
@@ -843,6 +844,7 @@ function ModernApp({ initialTab = 'dashboard' }) {
             </div>
           </>
         )}
+        </div>
       </div>
     </div>
   );

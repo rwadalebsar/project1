@@ -265,10 +265,15 @@ body {
 .main-content {
   flex: 1;
   margin-left: 260px;
-  padding: var(--space-6);
+  padding: 0;
   transition: var(--transition);
   min-height: 100vh;
   width: calc(100% - 260px);
+  overflow-y: auto;
+}
+
+.main-content > div {
+  padding: var(--space-6);
 }
 
 /* RTL support for main content */
@@ -290,7 +295,7 @@ body {
 
 /* Large screen optimizations */
 @media (min-width: 1600px) {
-  .main-content {
+  .main-content > div {
     padding: var(--space-8) var(--space-12);
   }
 
@@ -363,7 +368,7 @@ body {
 
 /* Extra large screen optimizations */
 @media (min-width: 2000px) {
-  .main-content {
+  .main-content > div {
     padding: var(--space-12) var(--space-16);
   }
 
