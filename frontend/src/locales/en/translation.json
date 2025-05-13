@@ -23,7 +23,27 @@
     "creatingAccount": "Creating Account...",
     "noAccount": "Don't have an account?",
     "haveAccount": "Already have an account?",
-    "loginFailed": "Login failed. Please check your credentials."
+    "loginFailed": "Login failed. Please check your credentials.",
+    "featuresTitle": "Why Choose Tank Monitor?",
+    "featuresSubtitle": "Our platform offers powerful tools to monitor and analyze your tank levels",
+    "features": {
+      "realtime": {
+        "title": "Real-time Monitoring",
+        "description": "Track tank levels in real-time with accurate data visualization and alerts"
+      },
+      "analytics": {
+        "title": "Advanced Analytics",
+        "description": "Gain insights with comprehensive analytics and historical data trends"
+      },
+      "anomaly": {
+        "title": "Anomaly Detection",
+        "description": "Automatically detect unusual patterns with our machine learning algorithms"
+      },
+      "multilingual": {
+        "title": "Multilingual Support",
+        "description": "Use the platform in your preferred language with full Arabic support"
+      }
+    }
   },
   "dashboard": {
     "dashboard": "Dashboard",

@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="200px" height="200px" viewBox="0 0 200 200" version="1.1" xmlns="http://www.w3.org/2000/svg">
+    <g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <circle fill="#4361EE" cx="100" cy="100" r="100"></circle>
+        <path d="M150,70 L150,150 C150,155.523 145.523,160 140,160 L60,160 C54.477,160 50,155.523 50,150 L50,70 C50,64.477 54.477,60 60,60 L140,60 C145.523,60 150,64.477 150,70 Z" fill="#FFFFFF"></path>
+        <path d="M140,60 L140,150 C140,155.523 135.523,160 130,160 L60,160 C54.477,160 50,155.523 50,150 L50,60" stroke="#4CC9F0" stroke-width="6" stroke-linecap="round"></path>
+        <path d="M60,120 L130,120" stroke="#4CC9F0" stroke-width="6" stroke-linecap="round"></path>
+        <path d="M60,100 L130,100" stroke="#4CC9F0" stroke-width="6" stroke-linecap="round"></path>
+        <path d="M60,80 L130,80" stroke="#4CC9F0" stroke-width="6" stroke-linecap="round"></path>
+        <path d="M95,140 C95,142.761 92.761,145 90,145 C87.239,145 85,142.761 85,140 C85,137.239 87.239,135 90,135 C92.761,135 95,137.239 95,140 Z" fill="#F72585"></path>
+        <path d="M115,140 C115,142.761 112.761,145 110,145 C107.239,145 105,142.761 105,140 C105,137.239 107.239,135 110,135 C112.761,135 115,137.239 115,140 Z" fill="#4361EE"></path>
+    </g>
+</svg>
