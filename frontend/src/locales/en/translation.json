@@ -1,7 +1,9 @@
 {
   "app": {
     "title": "Tank Level Monitoring",
-    "loading": "Loading dashboard data..."
+    "loading": "Loading dashboard data...",
+    "settings": "API Settings",
+    "refresh": "Refresh"
   },
   "auth": {
     "login": "Login",
@@ -179,7 +181,8 @@
     "edit": "Edit",
     "add": "Add",
     "all": "All",
-    "language": "Language"
+    "language": "Language",
+    "refresh": "Refresh"
   },
   "cloudConnections": {
     "title": "Cloud Connections",

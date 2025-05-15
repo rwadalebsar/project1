@@ -7,6 +7,8 @@ import LanguageSwitcher from './components/common/LanguageSwitcher'
 import ReportAnomalyForm from './components/anomalies/ReportAnomalyForm'
 import UserAnomaliesList from './components/anomalies/UserAnomaliesList'
 import ModelFeedback from './components/anomalies/ModelFeedback'
+import CloudConnectionsPage from './components/cloud/CloudConnectionsPage'
+import SubscriptionPage from './components/subscription/SubscriptionPage'
 import './modern.css'
 import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend,
@@ -582,7 +584,8 @@ function ModernApp({ initialTab = 'dashboard' }) {
             className={`nav-item ${activeTab === 'dashboard' ? 'active' : ''}`}
             onClick={() => {
               setActiveTab('dashboard');
-              navigate('/dashboard');
+              // Use window.location to force a full page reload
+              window.location.href = '/dashboard';
             }}
           >
             <Icons.Dashboard /> <span>{t('navigation.dashboard')}</span>
@@ -600,14 +603,16 @@ function ModernApp({ initialTab = 'dashboard' }) {
             onClick={() => {
               if (hasSubscription('basic')) {
                 setActiveTab('anomalies');
-                navigate('/anomalies');
+                // Use window.location to force a full page reload
+                window.location.href = '/anomalies';
               } else {
-                navigate('/subscription', { state: { requiredTier: 'basic' } });
+                // For subscription, also use window.location instead of navigate
+                window.location.href = '/subscription';
               }
             }}
           >
             <Icons.Alert /> <span>{t('navigation.anomalies')}</span>
-            {!hasSubscription('basic') && <span className="premium-feature">{t('dashboard.premium')}</span>}
+            {!hasSubscription('basic') && <span className="premium-feature">{t('subscription.tiers.premium')}</span>}
           </div>
 
           <div
@@ -623,7 +628,9 @@ function ModernApp({ initialTab = 'dashboard' }) {
           <div
             className={`nav-item ${activeTab === 'cloud-connections' ? 'active' : ''}`}
             onClick={() => {
-              navigate('/cloud-connections');
+              setActiveTab('cloud-connections');
+              // Use window.location to force a full page reload
+              window.location.href = '/cloud-connections';
             }}
           >
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -641,7 +648,11 @@ function ModernApp({ initialTab = 'dashboard' }) {
 
           <div
             className={`nav-item ${activeTab === 'subscription' ? 'active' : ''}`}
-            onClick={() => navigate('/subscription')}
+            onClick={() => {
+              setActiveTab('subscription');
+              // Use window.location to force a full page reload
+              window.location.href = '/subscription';
+            }}
           >
             <Icons.Star /> <span>{t('navigation.subscription')}</span>
           </div>
@@ -707,19 +718,19 @@ function ModernApp({ initialTab = 'dashboard' }) {
                     onChange={handleTimeRangeChange}
                     style={{ width: 'auto' }}
                   >
-                    <option value={7}>{t('dashboard.days7')}</option>
-                    <option value={30}>{t('dashboard.days30')}</option>
-                    <option value={90}>{t('dashboard.months3')}</option>
-                    <option value={180}>{t('dashboard.months6')}</option>
-                    <option value={365}>{t('dashboard.months12')}</option>
+                    <option value={7}>{t('dashboard.last7Days')}</option>
+                    <option value={30}>{t('dashboard.last30Days')}</option>
+                    <option value={90}>{t('dashboard.last3Months')}</option>
+                    <option value={180}>{t('dashboard.last6Months')}</option>
+                    <option value={365}>{t('dashboard.last12Months')}</option>
                   </select>
                 </div>
               )}
               <button className="btn btn-primary" onClick={fetchData}>
-                <Icons.Refresh /> <span className="btn-text">{t('dashboard.refresh')}</span>
+                <Icons.Refresh /> <span className="btn-text">{t('common.refresh')}</span>
               </button>
               <button className="btn btn-secondary" onClick={() => setShowConfig(true)}>
-                <Icons.Settings /> <span className="btn-text">{t('dashboard.apiSettings')}</span>
+                <Icons.Settings /> <span className="btn-text">{t('app.settings')}</span>
               </button>
               <LanguageSwitcher />
             </div>
@@ -749,7 +760,7 @@ function ModernApp({ initialTab = 'dashboard' }) {
         )}
 
         {/* Dashboard Content */}
-        {loading && activeTab !== 'user-anomalies' ? (
+        {loading && activeTab !== 'user-anomalies' && activeTab !== 'cloud-connections' ? (
           <div style={{
             display: 'flex',
             justifyContent: 'center',
@@ -791,6 +802,38 @@ function ModernApp({ initialTab = 'dashboard' }) {
                 />
               </div>
             )}
+          </>
+        ) : activeTab === 'cloud-connections' ? (
+          <>
+            {/* Cloud Connections Page */}
+            <div className="dashboard-grid col-span-12">
+              <div className="col-span-12">
+                <div className="card">
+                  <div className="card-header">
+                    <h3 className="card-title">{t('cloudConnections.title')}</h3>
+                  </div>
+                  <div style={{ padding: '20px' }}>
+                    <CloudConnectionsPage />
+                  </div>
+                </div>
+              </div>
+            </div>
+          </>
+        ) : activeTab === 'subscription' ? (
+          <>
+            {/* Subscription Page */}
+            <div className="dashboard-grid col-span-12">
+              <div className="col-span-12">
+                <div className="card">
+                  <div className="card-header">
+                    <h3 className="card-title">{t('navigation.subscription')}</h3>
+                  </div>
+                  <div style={{ padding: '20px' }}>
+                    <SubscriptionPage />
+                  </div>
+                </div>
+              </div>
+            </div>
           </>
         ) : (
           <>
@@ -840,7 +883,7 @@ function ModernApp({ initialTab = 'dashboard' }) {
                     </p>
                     <button
                       className="btn btn-primary"
-                      onClick={() => navigate('/subscription', { state: { requiredTier: 'basic' } })}
+                      onClick={() => window.location.href = '/subscription'}
                     >
                       {t('anomalies.upgradeButton')}
                     </button>

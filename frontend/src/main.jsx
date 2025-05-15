@@ -36,7 +36,7 @@ const App = () => {
             path="/subscription"
             element={
               <ProtectedRoute>
-                <SubscriptionPage />
+                <ModernApp initialTab="subscription" />
               </ProtectedRoute>
             }
           />
@@ -56,7 +56,7 @@ const App = () => {
             path="/cloud-connections"
             element={
               <ProtectedRoute>
-                <CloudConnectionsPage />
+                <ModernApp initialTab="cloud-connections" />
               </ProtectedRoute>
             }
           />

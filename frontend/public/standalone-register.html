@@ -288,7 +288,7 @@
       .auth-container {
         flex-direction: column;
       }
-      
+
       .auth-features-container {
         display: none;
       }
@@ -469,6 +469,18 @@
                 <p id="feature4-desc">Use the application in your preferred language with full localization</p>
               </div>
             </div>
+
+            <div class="feature-item">
+              <div class="feature-icon">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z" />
+                </svg>
+              </div>
+              <div class="feature-text">
+                <h3 id="feature5-title">Multi-Protocol Support</h3>
+                <p id="feature5-desc">Connect to various systems using MQTT, REST API, GraphQL, and OPC UA</p>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -483,47 +495,47 @@
         button.addEventListener('click', function() {
           const lang = this.dataset.lang;
           setLanguage(lang);
-          
+
           // Update active button
           languageButtons.forEach(btn => btn.classList.remove('active'));
           this.classList.add('active');
-          
+
           // Set document direction
           document.documentElement.dir = lang === 'ar' ? 'rtl' : 'ltr';
         });
       });
-      
+
       // Registration form submission
       const registerForm = document.getElementById('register-form');
       const errorDiv = document.getElementById('auth-error');
       const successDiv = document.getElementById('auth-success');
       const registerButton = document.getElementById('register-button');
-      
+
       registerForm.addEventListener('submit', async function(e) {
         e.preventDefault();
-        
+
         const username = document.getElementById('username').value;
         const email = document.getElementById('email').value;
         const password = document.getElementById('password').value;
         const confirmPassword = document.getElementById('confirm-password').value;
         const fullName = document.getElementById('full-name').value;
         const company = document.getElementById('company').value;
-        
+
         // Reset UI
         errorDiv.style.display = 'none';
         successDiv.style.display = 'none';
-        
+
         // Validate passwords match
         if (password !== confirmPassword) {
           errorDiv.textContent = currentLanguage === 'ar' ? 'كلمات المرور غير متطابقة' : 'Passwords do not match';
           errorDiv.style.display = 'block';
           return;
         }
-        
+
         // Disable button
         registerButton.disabled = true;
         registerButton.textContent = currentLanguage === 'ar' ? 'جاري التسجيل...' : 'Registering...';
-        
+
         try {
           const response = await fetch('http://localhost:8000/api/auth/register', {
             method: 'POST',
@@ -538,20 +550,20 @@
               company
             })
           });
-          
+
           const data = await response.json();
-          
+
           if (!response.ok) {
             throw new Error(data.detail || 'Registration failed');
           }
-          
+
           // Show success message
           successDiv.textContent = currentLanguage === 'ar' ? 'تم التسجيل بنجاح! يمكنك الآن تسجيل الدخول.' : 'Registration successful! You can now login.';
           successDiv.style.display = 'block';
-          
+
           // Reset form
           registerForm.reset();
-          
+
           // Redirect to login page after a delay
           setTimeout(() => {
             window.location.href = '/standalone-login.html';
@@ -567,7 +579,7 @@
           registerButton.textContent = currentLanguage === 'ar' ? 'تسجيل' : 'Register';
         }
       });
-      
+
       // Language translations
       const translations = {
         en: {
@@ -591,7 +603,9 @@
           feature3Title: 'Anomaly Detection',
           feature3Desc: 'Automatically detect and alert on unusual patterns with machine learning',
           feature4Title: 'Multilingual Support',
-          feature4Desc: 'Use the application in your preferred language with full localization'
+          feature4Desc: 'Use the application in your preferred language with full localization',
+          feature5Title: 'Multi-Protocol Support',
+          feature5Desc: 'Connect to various systems using MQTT, REST API, GraphQL, and OPC UA'
         },
         ar: {
           registerTitle: 'إنشاء حساب',
@@ -614,18 +628,20 @@
           feature3Title: 'اكتشاف الشذوذ',
           feature3Desc: 'اكتشاف وتنبيه تلقائي عن الأنماط غير العادية باستخدام التعلم الآلي',
           feature4Title: 'دعم متعدد اللغات',
-          feature4Desc: 'استخدم التطبيق بلغتك المفضلة مع توطين كامل'
+          feature4Desc: 'استخدم التطبيق بلغتك المفضلة مع توطين كامل',
+          feature5Title: 'دعم متعدد البروتوكولات',
+          feature5Desc: 'اتصل بأنظمة مختلفة باستخدام MQTT و REST API و GraphQL و OPC UA'
         }
       };
-      
+
       // Set current language
       let currentLanguage = 'en';
-      
+
       // Set language function
       function setLanguage(lang) {
         currentLanguage = lang;
         const t = translations[lang];
-        
+
         // Update UI text
         document.getElementById('register-title').textContent = t.registerTitle;
         document.getElementById('register-subtitle').textContent = t.registerSubtitle;
@@ -647,15 +663,17 @@
         document.getElementById('feature3-desc').textContent = t.feature3Desc;
         document.getElementById('feature4-title').textContent = t.feature4Title;
         document.getElementById('feature4-desc').textContent = t.feature4Desc;
-        
+        document.getElementById('feature5-title').textContent = t.feature5Title;
+        document.getElementById('feature5-desc').textContent = t.feature5Desc;
+
         // Store language preference
         localStorage.setItem('language', lang);
       }
-      
+
       // Initialize language from localStorage or default to English
       const savedLanguage = localStorage.getItem('language') || 'en';
       setLanguage(savedLanguage);
-      
+
       // Update active language button
       languageButtons.forEach(btn => {
         if (btn.dataset.lang === savedLanguage) {
@@ -664,7 +682,7 @@
           btn.classList.remove('active');
         }
       });
-      
+
       // Set document direction based on language
       document.documentElement.dir = savedLanguage === 'ar' ? 'rtl' : 'ltr';
     });

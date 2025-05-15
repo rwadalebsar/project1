@@ -4,32 +4,107 @@ import axios from 'axios';
 import { useAuth } from '../../context/AuthContext';
 import './Subscription.css';
 
+// For debugging
+console.log('SubscriptionPage module loaded');
+
 const SubscriptionPage = () => {
   const [subscriptionTiers, setSubscriptionTiers] = useState({});
   const [currentSubscription, setCurrentSubscription] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [billingCycle, setBillingCycle] = useState('monthly');
-  const { user, updateUser } = useAuth();
+  const { user, token, updateUser, isAuthenticated } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
-  
+
+  // Debug auth state
+  console.log('SubscriptionPage - Auth state:', {
+    user,
+    token: token ? 'exists' : 'missing',
+    isAuthenticated
+  });
+
   // Get the required tier from location state if available
   const requiredTier = location.state?.requiredTier;
 
   useEffect(() => {
     const fetchSubscriptionData = async () => {
+      console.log('SubscriptionPage - fetchSubscriptionData called');
       setLoading(true);
+
       try {
-        // Fetch subscription tiers
-        const tiersResponse = await axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:8000'}/api/subscription/tiers`);
-        setSubscriptionTiers(tiersResponse.data);
-        
-        // Fetch current subscription
-        const currentResponse = await axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:8000'}/api/subscription/current`);
-        setCurrentSubscription(currentResponse.data);
+        // Check if we have user data
+        console.log('SubscriptionPage - User data check:', {
+          userExists: !!user,
+          userSubscriptionTier: user?.subscription_tier
+        });
+
+        // Hardcode subscription tiers as fallback
+        const defaultTiers = {
+          "free": {
+            "name": "Free",
+            "max_tanks": 1,
+            "max_history_days": 7,
+            "anomaly_detection": false,
+            "price_monthly": 0.0,
+            "price_yearly": 0.0
+          },
+          "basic": {
+            "name": "Basic",
+            "max_tanks": 5,
+            "max_history_days": 30,
+            "anomaly_detection": true,
+            "price_monthly": 9.99,
+            "price_yearly": 99.99
+          },
+          "premium": {
+            "name": "Premium",
+            "max_tanks": 100,
+            "max_history_days": 365,
+            "anomaly_detection": true,
+            "price_monthly": 29.99,
+            "price_yearly": 299.99
+          }
+        };
+
+        // Try to fetch subscription tiers, but use defaults if it fails
+        let tiers = defaultTiers;
+        try {
+          console.log('SubscriptionPage - Fetching subscription tiers');
+          const tiersResponse = await axios.get(
+            `${import.meta.env.VITE_API_URL || 'http://localhost:8000'}/api/subscription/tiers`
+          );
+          console.log('SubscriptionPage - Tiers response:', tiersResponse.data);
+          tiers = tiersResponse.data || defaultTiers;
+        } catch (tierError) {
+          console.error('SubscriptionPage - Error fetching tiers:', tierError);
+          // Continue with default tiers
+        }
+
+        setSubscriptionTiers(tiers);
+
+        // If we have user data, create current subscription
+        if (user && user.subscription_tier) {
+          const currentSubscriptionData = {
+            tier: user.subscription_tier,
+            tier_details: tiers[user.subscription_tier],
+            expires_at: null // We don't have this information in the user object
+          };
+
+          console.log('SubscriptionPage - Setting current subscription:', currentSubscriptionData);
+          setCurrentSubscription(currentSubscriptionData);
+          setError(''); // Clear any previous errors
+        } else {
+          // Use a default subscription if user data is not available
+          console.log('SubscriptionPage - Using default free subscription');
+          setCurrentSubscription({
+            tier: 'free',
+            tier_details: tiers.free,
+            expires_at: null
+          });
+        }
       } catch (err) {
-        console.error('Error fetching subscription data:', err);
+        console.error('SubscriptionPage - Error in fetchSubscriptionData:', err);
         setError('Failed to load subscription information. Please try again later.');
       } finally {
         setLoading(false);
@@ -37,31 +112,42 @@ const SubscriptionPage = () => {
     };
 
     fetchSubscriptionData();
-  }, []);
+  }, [user]);
 
   const handleSubscribe = async (tier) => {
     // In a real application, this would redirect to a payment processor
     // For this demo, we'll just simulate a successful subscription
     alert(`This would redirect to a payment page for the ${tier} subscription.`);
-    
+
     // For demo purposes, let's pretend the subscription was successful
     // In a real app, this would be handled by a webhook from the payment processor
     try {
+      // Get the token from localStorage
+      const token = localStorage.getItem('token');
+
+      if (!token) {
+        throw new Error('Authentication token not found');
+      }
+
       // This endpoint doesn't exist in our demo, but would in a real app
       // await axios.post(`${import.meta.env.VITE_API_URL || 'http://localhost:8000'}/api/subscription/upgrade`, {
       //   tier: tier
+      // }, {
+      //   headers: {
+      //     'Authorization': `Bearer ${token}`
+      //   }
       // });
-      
+
       // Update the user object with the new subscription tier
       const updatedUser = {
         ...user,
         subscription_tier: tier
       };
-      
+
       updateUser(updatedUser);
-      
+
       // Redirect to dashboard
-      navigate('/dashboard');
+      window.location.href = '/dashboard';
     } catch (err) {
       console.error('Error upgrading subscription:', err);
       setError('Failed to upgrade subscription. Please try again later.');
@@ -81,7 +167,7 @@ const SubscriptionPage = () => {
     return (
       <div className="subscription-container">
         <div className="error-message">{error}</div>
-        <button onClick={() => navigate('/dashboard')} className="back-button">
+        <button onClick={() => window.location.href = '/dashboard'} className="back-button">
           Back to Dashboard
         </button>
       </div>
@@ -93,19 +179,19 @@ const SubscriptionPage = () => {
       <div className="subscription-header">
         <h1>Choose Your Subscription Plan</h1>
         <p>Select the plan that best fits your monitoring needs</p>
-        
+
         {requiredTier && (
           <div className="upgrade-notice">
             <p>You need at least a <strong>{subscriptionTiers[requiredTier]?.name}</strong> subscription to access this feature.</p>
           </div>
         )}
-        
+
         <div className="billing-toggle">
           <span className={billingCycle === 'monthly' ? 'active' : ''}>Monthly</span>
           <label className="switch">
-            <input 
-              type="checkbox" 
-              checked={billingCycle === 'yearly'} 
+            <input
+              type="checkbox"
+              checked={billingCycle === 'yearly'}
               onChange={() => setBillingCycle(billingCycle === 'monthly' ? 'yearly' : 'monthly')}
             />
             <span className="slider round"></span>
@@ -113,11 +199,11 @@ const SubscriptionPage = () => {
           <span className={billingCycle === 'yearly' ? 'active' : ''}>Yearly <span className="save-badge">Save 15%</span></span>
         </div>
       </div>
-      
+
       <div className="subscription-plans">
         {Object.entries(subscriptionTiers).map(([key, tier]) => (
-          <div 
-            key={key} 
+          <div
+            key={key}
             className={`plan-card ${currentSubscription?.tier === key ? 'current-plan' : ''}`}
           >
             <div className="plan-header">
@@ -130,7 +216,7 @@ const SubscriptionPage = () => {
                 <span className="period">/{billingCycle === 'monthly' ? 'month' : 'year'}</span>
               </div>
             </div>
-            
+
             <div className="plan-features">
               <ul>
                 <li>
@@ -161,12 +247,12 @@ const SubscriptionPage = () => {
                 )}
               </ul>
             </div>
-            
+
             <div className="plan-action">
               {currentSubscription?.tier === key ? (
                 <button className="current-plan-button" disabled>Current Plan</button>
               ) : (
-                <button 
+                <button
                   className="subscribe-button"
                   onClick={() => handleSubscribe(key)}
                 >
@@ -177,9 +263,9 @@ const SubscriptionPage = () => {
           </div>
         ))}
       </div>
-      
+
       <div className="subscription-footer">
-        <button onClick={() => navigate('/dashboard')} className="back-button">
+        <button onClick={() => window.location.href = '/dashboard'} className="back-button">
           Back to Dashboard
         </button>
       </div>

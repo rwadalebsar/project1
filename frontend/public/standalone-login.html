@@ -410,6 +410,18 @@
                 <p id="feature4-desc">Use the application in your preferred language with full localization</p>
               </div>
             </div>
+
+            <div class="feature-item">
+              <div class="feature-icon">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z" />
+                </svg>
+              </div>
+              <div class="feature-text">
+                <h3 id="feature5-title">Multi-Protocol Support</h3>
+                <p id="feature5-desc">Connect to various systems using MQTT, REST API, GraphQL, and OPC UA</p>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -514,7 +526,9 @@
           feature3Title: 'Anomaly Detection',
           feature3Desc: 'Automatically detect and alert on unusual patterns with machine learning',
           feature4Title: 'Multilingual Support',
-          feature4Desc: 'Use the application in your preferred language with full localization'
+          feature4Desc: 'Use the application in your preferred language with full localization',
+          feature5Title: 'Multi-Protocol Support',
+          feature5Desc: 'Connect to various systems using MQTT, REST API, GraphQL, and OPC UA'
         },
         ar: {
           loginTitle: 'تسجيل الدخول إلى حسابك',
@@ -533,7 +547,9 @@
           feature3Title: 'اكتشاف الشذوذ',
           feature3Desc: 'اكتشاف وتنبيه تلقائي عن الأنماط غير العادية باستخدام التعلم الآلي',
           feature4Title: 'دعم متعدد اللغات',
-          feature4Desc: 'استخدم التطبيق بلغتك المفضلة مع توطين كامل'
+          feature4Desc: 'استخدم التطبيق بلغتك المفضلة مع توطين كامل',
+          feature5Title: 'دعم متعدد البروتوكولات',
+          feature5Desc: 'اتصل بأنظمة مختلفة باستخدام MQTT و REST API و GraphQL و OPC UA'
         }
       };
 
@@ -562,6 +578,8 @@
         document.getElementById('feature3-desc').textContent = t.feature3Desc;
         document.getElementById('feature4-title').textContent = t.feature4Title;
         document.getElementById('feature4-desc').textContent = t.feature4Desc;
+        document.getElementById('feature5-title').textContent = t.feature5Title;
+        document.getElementById('feature5-desc').textContent = t.feature5Desc;
 
         // Store language preference
         localStorage.setItem('language', lang);
