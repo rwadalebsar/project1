@@ -1,0 +1,27 @@
+{
+  "enabled": false,
+  "mode": "tcp",
+  "host": "localhost",
+  "port": 502,
+  "port_name": "/dev/ttyUSB0",
+  "baudrate": 9600,
+  "bytesize": 8,
+  "parity": "N",
+  "stopbits": 1,
+  "unit_id": 1,
+  "timeout": 3,
+  "retries": 3,
+  "tank_registers": [
+    {
+      "tank_id": "tank1",
+      "name": "Tank 1",
+      "register_type": "holding",
+      "address": 100,
+      "data_type": "float",
+      "scaling_factor": 1.0,
+      "offset": 0.0
+    }
+  ],
+  "polling_interval": 60,
+  "user_id": null
+}

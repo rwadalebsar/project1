@@ -1,0 +1,29 @@
+.modern-language-switcher {
+  display: flex;
+  border-radius: 4px;
+  overflow: hidden;
+  border: 1px solid #e0e0e0;
+}
+
+.language-button {
+  background: none;
+  border: none;
+  padding: 6px 12px;
+  cursor: pointer;
+  font-size: 0.875rem;
+  transition: all 0.2s ease;
+}
+
+.language-button:hover {
+  background-color: rgba(0, 0, 0, 0.04);
+}
+
+.language-button.active {
+  background-color: #1976d2;
+  color: white;
+}
+
+/* RTL support */
+[dir="rtl"] .modern-language-switcher {
+  flex-direction: row-reverse;
+}

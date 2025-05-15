@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Check Authentication</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    .card {
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      padding: 15px;
+      margin-bottom: 20px;
+    }
+    .success {
+      color: #2e7d32;
+      background: #e8f5e9;
+    }
+    .error {
+      color: #c62828;
+      background: #ffebee;
+    }
+    pre {
+      background: #f5f5f5;
+      padding: 10px;
+      border-radius: 4px;
+      overflow-x: auto;
+    }
+    button {
+      padding: 10px 15px;
+      background: #1976d2;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      margin-right: 10px;
+      margin-bottom: 10px;
+    }
+    button:disabled {
+      background: #ccc;
+      cursor: not-allowed;
+    }
+  </style>
+</head>
+<body>
+  <h1>Authentication Status</h1>
+  
+  <div class="card" id="authStatus">
+    <h2>Current Authentication</h2>
+    <div id="authStatusContent"></div>
+  </div>
+  
+  <div class="card">
+    <h2>Actions</h2>
+    <button id="checkTankLevels">Check Tank Levels</button>
+    <button id="checkStats">Check Stats</button>
+    <button id="clearAuth">Clear Authentication</button>
+    <button id="goToLogin">Go to Login Page</button>
+    <button id="goToDashboard">Go to Dashboard</button>
+  </div>
+  
+  <div class="card" id="apiResult" style="display: none;">
+    <h2>API Result</h2>
+    <div id="apiResultContent"></div>
+  </div>
+  
+  <script>
+    // Display current auth status
+    function updateAuthStatus() {
+      const authStatusContent = document.getElementById('authStatusContent');
+      const user = localStorage.getItem('user');
+      const token = localStorage.getItem('token');
+      
+      let html = '';
+      
+      if (user && token) {
+        html += '<div class="success">You are authenticated!</div>';
+        html += '<h3>User:</h3>';
+        html += `<pre>${JSON.stringify(JSON.parse(user), null, 2)}</pre>`;
+        html += '<h3>Token:</h3>';
+        html += `<pre>${token}</pre>`;
+      } else {
+        html += '<div class="error">You are not authenticated.</div>';
+        if (!user) html += '<p>No user found in localStorage.</p>';
+        if (!token) html += '<p>No token found in localStorage.</p>';
+      }
+      
+      authStatusContent.innerHTML = html;
+    }
+    
+    // Make authenticated API request
+    async function makeAuthRequest(url, displayName) {
+      const apiResult = document.getElementById('apiResult');
+      const apiResultContent = document.getElementById('apiResultContent');
+      const token = localStorage.getItem('token');
+      
+      apiResult.style.display = 'block';
+      apiResultContent.innerHTML = `<p>Loading ${displayName}...</p>`;
+      
+      try {
+        const response = await fetch(url, {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+        
+        const data = await response.json();
+        
+        if (!response.ok) {
+          throw new Error(data.detail || `Failed to fetch ${displayName}`);
+        }
+        
+        apiResultContent.innerHTML = `
+          <div class="success">Successfully fetched ${displayName}!</div>
+          <h3>Response:</h3>
+          <pre>${JSON.stringify(data, null, 2)}</pre>
+        `;
+      } catch (error) {
+        apiResultContent.innerHTML = `
+          <div class="error">Error: ${error.message}</div>
+        `;
+        console.error(`API error (${displayName}):`, error);
+      }
+    }
+    
+    // Event listeners
+    document.getElementById('checkTankLevels').addEventListener('click', () => {
+      makeAuthRequest('http://localhost:8000/api/tank-levels', 'Tank Levels');
+    });
+    
+    document.getElementById('checkStats').addEventListener('click', () => {
+      makeAuthRequest('http://localhost:8000/api/stats', 'Stats');
+    });
+    
+    document.getElementById('clearAuth').addEventListener('click', () => {
+      localStorage.removeItem('user');
+      localStorage.removeItem('token');
+      updateAuthStatus();
+      
+      const apiResult = document.getElementById('apiResult');
+      apiResult.style.display = 'none';
+    });
+    
+    document.getElementById('goToLogin').addEventListener('click', () => {
+      window.location.href = '/login';
+    });
+    
+    document.getElementById('goToDashboard').addEventListener('click', () => {
+      window.location.href = '/dashboard';
+    });
+    
+    // Initialize
+    updateAuthStatus();
+  </script>
+</body>
+</html>

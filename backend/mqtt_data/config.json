@@ -1,0 +1,11 @@
+{
+  "enabled": false,
+  "broker": "localhost",
+  "port": 1883,
+  "username": "",
+  "password": "",
+  "client_id": "tank_monitor_1747262236",
+  "topic_prefix": "tanks",
+  "use_ssl": false,
+  "user_id": null
+}

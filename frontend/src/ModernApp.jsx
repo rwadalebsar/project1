@@ -41,6 +41,11 @@ const Icons = {
       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
     </svg>
   ),
+  Star: () => (
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
+    </svg>
+  ),
   Add: () => (
     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
@@ -580,14 +585,14 @@ function ModernApp({ initialTab = 'dashboard' }) {
               navigate('/dashboard');
             }}
           >
-            <Icons.Dashboard /> <span>{t('dashboard.dashboard')}</span>
+            <Icons.Dashboard /> <span>{t('navigation.dashboard')}</span>
           </div>
 
           <div
             className={`nav-item ${activeTab === 'analytics' ? 'active' : ''}`}
             onClick={() => setActiveTab('analytics')}
           >
-            <Icons.Chart /> <span>{t('dashboard.analytics')}</span>
+            <Icons.Chart /> <span>{t('navigation.analytics')}</span>
           </div>
 
           <div
@@ -601,7 +606,7 @@ function ModernApp({ initialTab = 'dashboard' }) {
               }
             }}
           >
-            <Icons.Alert /> <span>{t('dashboard.anomalies')}</span>
+            <Icons.Alert /> <span>{t('navigation.anomalies')}</span>
             {!hasSubscription('basic') && <span className="premium-feature">{t('dashboard.premium')}</span>}
           </div>
 
@@ -612,21 +617,33 @@ function ModernApp({ initialTab = 'dashboard' }) {
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
             </svg>
-            <span>{t('dashboard.reportedAnomalies')}</span>
+            <span>{t('navigation.reportAnomaly')}</span>
+          </div>
+
+          <div
+            className={`nav-item ${activeTab === 'cloud-connections' ? 'active' : ''}`}
+            onClick={() => {
+              navigate('/cloud-connections');
+            }}
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z" />
+            </svg>
+            <span>{t('navigation.cloudConnections')}</span>
           </div>
 
           <div
             className={`nav-item ${activeTab === 'settings' ? 'active' : ''}`}
             onClick={() => setShowConfig(true)}
           >
-            <Icons.Settings /> <span>{t('dashboard.settings')}</span>
+            <Icons.Settings /> <span>{t('navigation.settings')}</span>
           </div>
 
           <div
             className={`nav-item ${activeTab === 'subscription' ? 'active' : ''}`}
             onClick={() => navigate('/subscription')}
           >
-            <Icons.Settings /> <span>{t('dashboard.subscription')}</span>
+            <Icons.Star /> <span>{t('navigation.subscription')}</span>
           </div>
         </div>
 
@@ -634,7 +651,7 @@ function ModernApp({ initialTab = 'dashboard' }) {
           <div className="nav-item" onClick={() => setSidebarOpen(!sidebarOpen)}>
             {sidebarOpen ? (
               <>
-                <Icons.Menu /> <span>{t('dashboard.collapseMenu')}</span>
+                <Icons.Menu /> <span>{t('navigation.collapseMenu')}</span>
               </>
             ) : (
               <Icons.Menu />
@@ -664,8 +681,20 @@ function ModernApp({ initialTab = 'dashboard' }) {
               </button>
               <h1 className="page-title">
                 {activeTab === 'user-anomalies'
-                  ? t('dashboard.reportedAnomalies')
-                  : t('app.title')}
+                  ? t('navigation.reportAnomaly')
+                  : activeTab === 'dashboard'
+                    ? t('navigation.dashboard')
+                    : activeTab === 'analytics'
+                      ? t('navigation.analytics')
+                      : activeTab === 'anomalies'
+                        ? t('navigation.anomalies')
+                        : activeTab === 'cloud-connections'
+                          ? t('navigation.cloudConnections')
+                          : activeTab === 'settings'
+                            ? t('navigation.settings')
+                            : activeTab === 'subscription'
+                              ? t('navigation.subscription')
+                              : t('app.title')}
               </h1>
             </div>
             <div className="header-actions">

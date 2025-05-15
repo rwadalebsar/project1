@@ -1,0 +1,16 @@
+{
+  "enabled": false,
+  "base_url": "https://api.example.com",
+  "api_key": "",
+  "username": "",
+  "password": "",
+  "auth_type": "none",
+  "headers": {},
+  "endpoints": {
+    "tanks": "/tanks",
+    "levels": "/tanks/{tank_id}/levels",
+    "auth": "/auth/token"
+  },
+  "polling_interval": 60,
+  "user_id": null
+}

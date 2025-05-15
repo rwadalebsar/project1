@@ -1,0 +1,16 @@
+{
+  "enabled": false,
+  "endpoint": "https://api.example.com/graphql",
+  "api_key": "",
+  "username": "",
+  "password": "",
+  "auth_type": "none",
+  "auth_endpoint": "https://api.example.com/auth",
+  "headers": {},
+  "queries": {
+    "tanks": "\n                    query GetTanks {\n                        tanks {\n                            id\n                            name\n                            capacity\n                        }\n                    }\n                ",
+    "tankLevel": "\n                    query GetTankLevel($tankId: ID!) {\n                        tank(id: $tankId) {\n                            id\n                            name\n                            level\n                            lastUpdated\n                        }\n                    }\n                "
+  },
+  "polling_interval": 60,
+  "user_id": null
+}

@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Simple Dashboard</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid #ddd;
+    }
+    .user-info {
+      display: flex;
+      align-items: center;
+    }
+    .avatar {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background-color: #1976d2;
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-right: 10px;
+      font-weight: bold;
+    }
+    .card {
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      padding: 15px;
+      margin-bottom: 20px;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 20px;
+    }
+    button {
+      padding: 8px 15px;
+      background: #1976d2;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    button.secondary {
+      background: #f5f5f5;
+      color: #333;
+      border: 1px solid #ddd;
+    }
+    pre {
+      background: #f5f5f5;
+      padding: 10px;
+      border-radius: 4px;
+      overflow-x: auto;
+    }
+    .error {
+      color: #c62828;
+      background: #ffebee;
+      padding: 10px;
+      border-radius: 4px;
+      margin-bottom: 15px;
+    }
+    .success {
+      color: #2e7d32;
+      background: #e8f5e9;
+      padding: 10px;
+      border-radius: 4px;
+      margin-bottom: 15px;
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>Simple Dashboard</h1>
+    <div class="user-info">
+      <div class="avatar" id="avatar">?</div>
+      <div>
+        <div id="username">Not logged in</div>
+        <div id="subscription" style="font-size: 0.8em; color: #666;"></div>
+      </div>
+    </div>
+  </div>
+  
+  <div id="auth-error" class="error" style="display: none;">
+    You are not authenticated. Please <a href="/login-redirect.html">login</a> first.
+  </div>
+  
+  <div id="dashboard-content" style="display: none;">
+    <div class="card">
+      <h2>User Information</h2>
+      <pre id="user-data"></pre>
+    </div>
+    
+    <div class="grid">
+      <div class="card">
+        <h2>Tank Levels</h2>
+        <div id="tank-levels-content">Loading...</div>
+        <button id="refresh-tank-levels" class="secondary">Refresh</button>
+      </div>
+      
+      <div class="card">
+        <h2>Statistics</h2>
+        <div id="stats-content">Loading...</div>
+        <button id="refresh-stats" class="secondary">Refresh</button>
+      </div>
+      
+      <div class="card">
+        <h2>Anomalies</h2>
+        <div id="anomalies-content">Loading...</div>
+        <button id="refresh-anomalies" class="secondary">Refresh</button>
+      </div>
+    </div>
+    
+    <button id="logout-btn">Logout</button>
+  </div>
+  
+  <script>
+    // Check authentication
+    function checkAuth() {
+      const user = localStorage.getItem('user');
+      const token = localStorage.getItem('token');
+      
+      if (!user || !token) {
+        document.getElementById('auth-error').style.display = 'block';
+        document.getElementById('dashboard-content').style.display = 'none';
+        return false;
+      }
+      
+      try {
+        const userData = JSON.parse(user);
+        document.getElementById('username').textContent = userData.username;
+        document.getElementById('subscription').textContent = `Subscription: ${userData.subscription_tier}`;
+        document.getElementById('avatar').textContent = userData.username.charAt(0).toUpperCase();
+        document.getElementById('user-data').textContent = JSON.stringify(userData, null, 2);
+        
+        document.getElementById('auth-error').style.display = 'none';
+        document.getElementById('dashboard-content').style.display = 'block';
+        
+        return true;
+      } catch (error) {
+        console.error('Error parsing user data:', error);
+        document.getElementById('auth-error').style.display = 'block';
+        document.getElementById('dashboard-content').style.display = 'none';
+        return false;
+      }
+    }
+    
+    // Fetch data from API
+    async function fetchData(endpoint, elementId) {
+      const contentElement = document.getElementById(elementId);
+      const token = localStorage.getItem('token');
+      
+      try {
+        contentElement.innerHTML = 'Loading...';
+        
+        const response = await fetch(`http://localhost:8000/api/${endpoint}`, {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+        
+        if (!response.ok) {
+          throw new Error(`Failed to fetch ${endpoint}`);
+        }
+        
+        const data = await response.json();
+        contentElement.innerHTML = `<pre>${JSON.stringify(data, null, 2)}</pre>`;
+      } catch (error) {
+        contentElement.innerHTML = `<div class="error">Error: ${error.message}</div>`;
+      }
+    }
+    
+    // Logout function
+    function logout() {
+      localStorage.removeItem('user');
+      localStorage.removeItem('token');
+      window.location.href = '/login-redirect.html';
+    }
+    
+    // Initialize
+    document.addEventListener('DOMContentLoaded', function() {
+      if (checkAuth()) {
+        // Fetch initial data
+        fetchData('tank-levels', 'tank-levels-content');
+        fetchData('stats', 'stats-content');
+        fetchData('anomalies', 'anomalies-content');
+        
+        // Set up refresh buttons
+        document.getElementById('refresh-tank-levels').addEventListener('click', () => {
+          fetchData('tank-levels', 'tank-levels-content');
+        });
+        
+        document.getElementById('refresh-stats').addEventListener('click', () => {
+          fetchData('stats', 'stats-content');
+        });
+        
+        document.getElementById('refresh-anomalies').addEventListener('click', () => {
+          fetchData('anomalies', 'anomalies-content');
+        });
+        
+        // Set up logout button
+        document.getElementById('logout-btn').addEventListener('click', logout);
+      }
+    });
+  </script>
+</body>
+</html>

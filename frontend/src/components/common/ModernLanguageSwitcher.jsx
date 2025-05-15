@@ -1,8 +1,7 @@
-import React from 'react';
 import { useTranslation } from 'react-i18next';
-import { Button, ButtonGroup } from '@mui/material';
+import './ModernLanguageSwitcher.css';
 
-const LanguageSwitcher = () => {
+const ModernLanguageSwitcher = () => {
   const { i18n } = useTranslation();
 
   const changeLanguage = (lng) => {
@@ -14,21 +13,21 @@ const LanguageSwitcher = () => {
   };
 
   return (
-    <ButtonGroup size="small" aria-label="language switcher">
-      <Button 
+    <div className="modern-language-switcher">
+      <button 
+        className={`language-button ${i18n.language === 'en' ? 'active' : ''}`}
         onClick={() => changeLanguage('en')}
-        variant={i18n.language === 'en' ? 'contained' : 'outlined'}
       >
         EN
-      </Button>
-      <Button 
+      </button>
+      <button 
+        className={`language-button ${i18n.language === 'ar' ? 'active' : ''}`}
         onClick={() => changeLanguage('ar')}
-        variant={i18n.language === 'ar' ? 'contained' : 'outlined'}
       >
         عربي
-      </Button>
-    </ButtonGroup>
+      </button>
+    </div>
   );
 };
 
-export default LanguageSwitcher;
+export default ModernLanguageSwitcher;

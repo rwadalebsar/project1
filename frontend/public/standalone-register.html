@@ -1,0 +1,673 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tank Monitor Registration</title>
+  <style>
+    :root {
+      --primary-color: #1976d2;
+      --primary-dark: #1565c0;
+      --primary-light: #bbdefb;
+      --accent-color: #ff4081;
+      --text-color: #333;
+      --text-light: #666;
+      --background-color: #f5f5f5;
+      --card-color: #fff;
+      --border-color: #e0e0e0;
+      --success-color: #4caf50;
+      --error-color: #f44336;
+      --gray-100: #f8f9fa;
+      --gray-200: #e9ecef;
+      --gray-300: #dee2e6;
+      --gray-400: #ced4da;
+      --gray-500: #adb5bd;
+      --gray-600: #6c757d;
+      --gray-700: #495057;
+      --gray-800: #343a40;
+      --gray-900: #212529;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background-color: var(--background-color);
+      color: var(--text-color);
+      line-height: 1.6;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .auth-page-wrapper {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      padding: 20px;
+    }
+
+    .auth-container {
+      display: flex;
+      width: 100%;
+      max-width: 1200px;
+      min-height: 600px;
+      background-color: var(--card-color);
+      border-radius: 12px;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+      overflow: hidden;
+    }
+
+    .auth-form-container {
+      flex: 1;
+      padding: 40px;
+      position: relative;
+    }
+
+    .auth-features-container {
+      flex: 1;
+      background-color: var(--primary-color);
+      color: white;
+      padding: 40px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+
+    .auth-logo-container {
+      display: flex;
+      align-items: center;
+      margin-bottom: 30px;
+    }
+
+    .auth-logo {
+      width: 40px;
+      height: 40px;
+      margin-right: 10px;
+    }
+
+    .auth-logo-text {
+      font-size: 24px;
+      font-weight: bold;
+      color: var(--primary-color);
+    }
+
+    .auth-header {
+      margin-bottom: 30px;
+    }
+
+    .auth-header h1 {
+      font-size: 28px;
+      margin-bottom: 10px;
+      color: var(--gray-800);
+    }
+
+    .auth-header p {
+      color: var(--gray-600);
+    }
+
+    .auth-form {
+      margin-bottom: 30px;
+    }
+
+    .form-group {
+      margin-bottom: 20px;
+    }
+
+    .form-group label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: 500;
+      color: var(--gray-700);
+    }
+
+    .form-control {
+      width: 100%;
+      padding: 12px 16px;
+      font-size: 16px;
+      border: 1px solid var(--gray-300);
+      border-radius: 8px;
+      transition: border-color 0.3s;
+    }
+
+    .form-control:focus {
+      outline: none;
+      border-color: var(--primary-color);
+      box-shadow: 0 0 0 3px var(--primary-light);
+    }
+
+    .auth-button {
+      width: 100%;
+      padding: 12px;
+      background-color: var(--primary-color);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background-color 0.3s;
+    }
+
+    .auth-button:hover {
+      background-color: var(--primary-dark);
+    }
+
+    .auth-button:disabled {
+      background-color: var(--gray-400);
+      cursor: not-allowed;
+    }
+
+    .auth-error {
+      background-color: #ffebee;
+      color: var(--error-color);
+      padding: 12px;
+      border-radius: 8px;
+      margin-bottom: 20px;
+      border-left: 4px solid var(--error-color);
+    }
+
+    .auth-success {
+      background-color: #e8f5e9;
+      color: var(--success-color);
+      padding: 12px;
+      border-radius: 8px;
+      margin-bottom: 20px;
+      border-left: 4px solid var(--success-color);
+    }
+
+    .auth-footer {
+      text-align: center;
+      color: var(--gray-600);
+    }
+
+    .auth-footer a {
+      color: var(--primary-color);
+      text-decoration: none;
+      font-weight: 500;
+    }
+
+    .auth-footer a:hover {
+      text-decoration: underline;
+    }
+
+    .features-header {
+      margin-bottom: 40px;
+    }
+
+    .features-header h2 {
+      font-size: 24px;
+      margin-bottom: 10px;
+    }
+
+    .feature-list {
+      display: flex;
+      flex-direction: column;
+      gap: 30px;
+    }
+
+    .feature-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 15px;
+    }
+
+    .feature-icon {
+      width: 40px;
+      height: 40px;
+      background-color: rgba(255, 255, 255, 0.2);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .feature-icon svg {
+      width: 24px;
+      height: 24px;
+    }
+
+    .feature-text h3 {
+      font-size: 18px;
+      margin-bottom: 5px;
+    }
+
+    .feature-text p {
+      opacity: 0.8;
+      font-size: 14px;
+    }
+
+    .auth-language-switcher {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+    }
+
+    .language-switcher {
+      display: flex;
+      border-radius: 4px;
+      overflow: hidden;
+      border: 1px solid var(--gray-300);
+    }
+
+    .language-button {
+      background: none;
+      border: none;
+      padding: 6px 12px;
+      cursor: pointer;
+      font-size: 14px;
+      transition: all 0.2s ease;
+    }
+
+    .language-button:hover {
+      background-color: var(--gray-100);
+    }
+
+    .language-button.active {
+      background-color: var(--primary-color);
+      color: white;
+    }
+
+    .form-row {
+      display: flex;
+      gap: 20px;
+    }
+
+    .form-row .form-group {
+      flex: 1;
+    }
+
+    /* Responsive styles */
+    @media (max-width: 992px) {
+      .auth-container {
+        flex-direction: column;
+      }
+      
+      .auth-features-container {
+        display: none;
+      }
+
+      .form-row {
+        flex-direction: column;
+        gap: 0;
+      }
+    }
+
+    @media (max-width: 576px) {
+      .auth-form-container {
+        padding: 20px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="auth-page-wrapper">
+    <div class="auth-container">
+      <!-- Left side - Registration Form -->
+      <div class="auth-form-container">
+        <div class="auth-language-switcher">
+          <div class="language-switcher">
+            <button class="language-button active" data-lang="en">EN</button>
+            <button class="language-button" data-lang="ar">عربي</button>
+          </div>
+        </div>
+
+        <div class="auth-logo-container">
+          <img src="/src/assets/logo.svg" alt="Tank Monitor Logo" class="auth-logo" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjMTk3NmQyIiBzdHJva2Utd2lkdGg9IjIiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCI+PHBhdGggZD0iTTE5IDExSDVtMTQgMGEyIDIgMCAwMTIgMnY2YTIgMiAwIDAxLTIgMkg1YTIgMiAwIDAxLTItMnYtNmEyIDIgMCAwMTItMm0xNCAwVjlhMiAyIDAgMDAtMi0yTTUgMTFWOWEyIDIgMCAwMTItMm0wIDBWNWEyIDIgMCAwMTItMmg2YTIgMiAwIDAxMiAydjJNNyA3aDEwIi8+PC9zdmc+'" />
+          <div class="auth-logo-text">TankMonitor</div>
+        </div>
+
+        <div class="auth-header">
+          <h1 id="register-title">Create an account</h1>
+          <p id="register-subtitle">Fill in your details to get started</p>
+        </div>
+
+        <div id="auth-error" class="auth-error" style="display: none;"></div>
+        <div id="auth-success" class="auth-success" style="display: none;"></div>
+
+        <form id="register-form" class="auth-form">
+          <div class="form-row">
+            <div class="form-group">
+              <label for="username" id="username-label">Username</label>
+              <input
+                type="text"
+                id="username"
+                class="form-control"
+                placeholder="Choose a username"
+                required
+              />
+            </div>
+            <div class="form-group">
+              <label for="email" id="email-label">Email</label>
+              <input
+                type="email"
+                id="email"
+                class="form-control"
+                placeholder="Enter your email"
+                required
+              />
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="password" id="password-label">Password</label>
+              <input
+                type="password"
+                id="password"
+                class="form-control"
+                placeholder="Create a password"
+                required
+              />
+            </div>
+            <div class="form-group">
+              <label for="confirm-password" id="confirm-password-label">Confirm Password</label>
+              <input
+                type="password"
+                id="confirm-password"
+                class="form-control"
+                placeholder="Confirm your password"
+                required
+              />
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="full-name" id="full-name-label">Full Name</label>
+              <input
+                type="text"
+                id="full-name"
+                class="form-control"
+                placeholder="Enter your full name"
+              />
+            </div>
+            <div class="form-group">
+              <label for="company" id="company-label">Company (Optional)</label>
+              <input
+                type="text"
+                id="company"
+                class="form-control"
+                placeholder="Enter your company name"
+              />
+            </div>
+          </div>
+
+          <button
+            type="submit"
+            class="auth-button"
+            id="register-button"
+          >
+            Register
+          </button>
+        </form>
+
+        <div class="auth-footer">
+          <p id="have-account-text">Already have an account? <a href="/standalone-login.html" id="login-link">Login</a></p>
+        </div>
+      </div>
+
+      <!-- Right side - Features Showcase -->
+      <div class="auth-features-container">
+        <div class="features-content">
+          <div class="features-header">
+            <h2 id="features-title">Why Choose TankMonitor?</h2>
+            <p id="features-subtitle">Powerful features to monitor and manage your tanks</p>
+          </div>
+
+          <div class="feature-list">
+            <div class="feature-item">
+              <div class="feature-icon">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
+                </svg>
+              </div>
+              <div class="feature-text">
+                <h3 id="feature1-title">Real-time Monitoring</h3>
+                <p id="feature1-desc">Track tank levels in real-time with accurate measurements and instant updates</p>
+              </div>
+            </div>
+
+            <div class="feature-item">
+              <div class="feature-icon">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                </svg>
+              </div>
+              <div class="feature-text">
+                <h3 id="feature2-title">Advanced Analytics</h3>
+                <p id="feature2-desc">Gain insights with comprehensive analytics and customizable reports</p>
+              </div>
+            </div>
+
+            <div class="feature-item">
+              <div class="feature-icon">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                </svg>
+              </div>
+              <div class="feature-text">
+                <h3 id="feature3-title">Anomaly Detection</h3>
+                <p id="feature3-desc">Automatically detect and alert on unusual patterns with machine learning</p>
+              </div>
+            </div>
+
+            <div class="feature-item">
+              <div class="feature-icon">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129" />
+                </svg>
+              </div>
+              <div class="feature-text">
+                <h3 id="feature4-title">Multilingual Support</h3>
+                <p id="feature4-desc">Use the application in your preferred language with full localization</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      // Language switching
+      const languageButtons = document.querySelectorAll('.language-button');
+      languageButtons.forEach(button => {
+        button.addEventListener('click', function() {
+          const lang = this.dataset.lang;
+          setLanguage(lang);
+          
+          // Update active button
+          languageButtons.forEach(btn => btn.classList.remove('active'));
+          this.classList.add('active');
+          
+          // Set document direction
+          document.documentElement.dir = lang === 'ar' ? 'rtl' : 'ltr';
+        });
+      });
+      
+      // Registration form submission
+      const registerForm = document.getElementById('register-form');
+      const errorDiv = document.getElementById('auth-error');
+      const successDiv = document.getElementById('auth-success');
+      const registerButton = document.getElementById('register-button');
+      
+      registerForm.addEventListener('submit', async function(e) {
+        e.preventDefault();
+        
+        const username = document.getElementById('username').value;
+        const email = document.getElementById('email').value;
+        const password = document.getElementById('password').value;
+        const confirmPassword = document.getElementById('confirm-password').value;
+        const fullName = document.getElementById('full-name').value;
+        const company = document.getElementById('company').value;
+        
+        // Reset UI
+        errorDiv.style.display = 'none';
+        successDiv.style.display = 'none';
+        
+        // Validate passwords match
+        if (password !== confirmPassword) {
+          errorDiv.textContent = currentLanguage === 'ar' ? 'كلمات المرور غير متطابقة' : 'Passwords do not match';
+          errorDiv.style.display = 'block';
+          return;
+        }
+        
+        // Disable button
+        registerButton.disabled = true;
+        registerButton.textContent = currentLanguage === 'ar' ? 'جاري التسجيل...' : 'Registering...';
+        
+        try {
+          const response = await fetch('http://localhost:8000/api/auth/register', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+              username,
+              email,
+              password,
+              full_name: fullName,
+              company
+            })
+          });
+          
+          const data = await response.json();
+          
+          if (!response.ok) {
+            throw new Error(data.detail || 'Registration failed');
+          }
+          
+          // Show success message
+          successDiv.textContent = currentLanguage === 'ar' ? 'تم التسجيل بنجاح! يمكنك الآن تسجيل الدخول.' : 'Registration successful! You can now login.';
+          successDiv.style.display = 'block';
+          
+          // Reset form
+          registerForm.reset();
+          
+          // Redirect to login page after a delay
+          setTimeout(() => {
+            window.location.href = '/standalone-login.html';
+          }, 3000);
+        } catch (error) {
+          // Show error message
+          errorDiv.textContent = error.message;
+          errorDiv.style.display = 'block';
+          console.error('Registration error:', error);
+        } finally {
+          // Reset button
+          registerButton.disabled = false;
+          registerButton.textContent = currentLanguage === 'ar' ? 'تسجيل' : 'Register';
+        }
+      });
+      
+      // Language translations
+      const translations = {
+        en: {
+          registerTitle: 'Create an account',
+          registerSubtitle: 'Fill in your details to get started',
+          usernameLabel: 'Username',
+          emailLabel: 'Email',
+          passwordLabel: 'Password',
+          confirmPasswordLabel: 'Confirm Password',
+          fullNameLabel: 'Full Name',
+          companyLabel: 'Company (Optional)',
+          registerButton: 'Register',
+          haveAccount: 'Already have an account?',
+          login: 'Login',
+          featuresTitle: 'Why Choose TankMonitor?',
+          featuresSubtitle: 'Powerful features to monitor and manage your tanks',
+          feature1Title: 'Real-time Monitoring',
+          feature1Desc: 'Track tank levels in real-time with accurate measurements and instant updates',
+          feature2Title: 'Advanced Analytics',
+          feature2Desc: 'Gain insights with comprehensive analytics and customizable reports',
+          feature3Title: 'Anomaly Detection',
+          feature3Desc: 'Automatically detect and alert on unusual patterns with machine learning',
+          feature4Title: 'Multilingual Support',
+          feature4Desc: 'Use the application in your preferred language with full localization'
+        },
+        ar: {
+          registerTitle: 'إنشاء حساب',
+          registerSubtitle: 'املأ بياناتك للبدء',
+          usernameLabel: 'اسم المستخدم',
+          emailLabel: 'البريد الإلكتروني',
+          passwordLabel: 'كلمة المرور',
+          confirmPasswordLabel: 'تأكيد كلمة المرور',
+          fullNameLabel: 'الاسم الكامل',
+          companyLabel: 'الشركة (اختياري)',
+          registerButton: 'تسجيل',
+          haveAccount: 'هل لديك حساب بالفعل؟',
+          login: 'تسجيل الدخول',
+          featuresTitle: 'لماذا تختار مراقب الخزان؟',
+          featuresSubtitle: 'ميزات قوية لمراقبة وإدارة خزاناتك',
+          feature1Title: 'مراقبة في الوقت الحقيقي',
+          feature1Desc: 'تتبع مستويات الخزان في الوقت الحقيقي مع قياسات دقيقة وتحديثات فورية',
+          feature2Title: 'تحليلات متقدمة',
+          feature2Desc: 'اكتسب رؤى مع تحليلات شاملة وتقارير قابلة للتخصيص',
+          feature3Title: 'اكتشاف الشذوذ',
+          feature3Desc: 'اكتشاف وتنبيه تلقائي عن الأنماط غير العادية باستخدام التعلم الآلي',
+          feature4Title: 'دعم متعدد اللغات',
+          feature4Desc: 'استخدم التطبيق بلغتك المفضلة مع توطين كامل'
+        }
+      };
+      
+      // Set current language
+      let currentLanguage = 'en';
+      
+      // Set language function
+      function setLanguage(lang) {
+        currentLanguage = lang;
+        const t = translations[lang];
+        
+        // Update UI text
+        document.getElementById('register-title').textContent = t.registerTitle;
+        document.getElementById('register-subtitle').textContent = t.registerSubtitle;
+        document.getElementById('username-label').textContent = t.usernameLabel;
+        document.getElementById('email-label').textContent = t.emailLabel;
+        document.getElementById('password-label').textContent = t.passwordLabel;
+        document.getElementById('confirm-password-label').textContent = t.confirmPasswordLabel;
+        document.getElementById('full-name-label').textContent = t.fullNameLabel;
+        document.getElementById('company-label').textContent = t.companyLabel;
+        document.getElementById('register-button').textContent = t.registerButton;
+        document.getElementById('have-account-text').innerHTML = `${t.haveAccount} <a href="/standalone-login.html" id="login-link">${t.login}</a>`;
+        document.getElementById('features-title').textContent = t.featuresTitle;
+        document.getElementById('features-subtitle').textContent = t.featuresSubtitle;
+        document.getElementById('feature1-title').textContent = t.feature1Title;
+        document.getElementById('feature1-desc').textContent = t.feature1Desc;
+        document.getElementById('feature2-title').textContent = t.feature2Title;
+        document.getElementById('feature2-desc').textContent = t.feature2Desc;
+        document.getElementById('feature3-title').textContent = t.feature3Title;
+        document.getElementById('feature3-desc').textContent = t.feature3Desc;
+        document.getElementById('feature4-title').textContent = t.feature4Title;
+        document.getElementById('feature4-desc').textContent = t.feature4Desc;
+        
+        // Store language preference
+        localStorage.setItem('language', lang);
+      }
+      
+      // Initialize language from localStorage or default to English
+      const savedLanguage = localStorage.getItem('language') || 'en';
+      setLanguage(savedLanguage);
+      
+      // Update active language button
+      languageButtons.forEach(btn => {
+        if (btn.dataset.lang === savedLanguage) {
+          btn.classList.add('active');
+        } else {
+          btn.classList.remove('active');
+        }
+      });
+      
+      // Set document direction based on language
+      document.documentElement.dir = savedLanguage === 'ar' ? 'rtl' : 'ltr';
+    });
+  </script>
+</body>
+</html>

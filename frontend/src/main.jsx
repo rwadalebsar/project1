@@ -9,6 +9,7 @@ import Login from './components/auth/Login.jsx'
 import Register from './components/auth/Register.jsx'
 import ProtectedRoute from './components/auth/ProtectedRoute.jsx'
 import SubscriptionPage from './components/subscription/SubscriptionPage.jsx'
+import CloudConnectionsPage from './components/cloud/CloudConnectionsPage.jsx'
 import { AuthProvider } from './context/AuthContext.jsx'
 
 const App = () => {
@@ -46,6 +47,16 @@ const App = () => {
             element={
               <ProtectedRoute requiredSubscription="basic">
                 <ModernApp initialTab="anomalies" />
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Cloud Connections page */}
+          <Route
+            path="/cloud-connections"
+            element={
+              <ProtectedRoute>
+                <CloudConnectionsPage />
               </ProtectedRoute>
             }
           />

@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login After Logout Test</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    .card {
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      padding: 20px;
+      margin-bottom: 20px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    .form-group {
+      margin-bottom: 15px;
+    }
+    label {
+      display: block;
+      margin-bottom: 5px;
+      font-weight: bold;
+    }
+    input {
+      width: 100%;
+      padding: 8px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      box-sizing: border-box;
+    }
+    button {
+      background-color: #1976d2;
+      color: white;
+      border: none;
+      padding: 10px 15px;
+      border-radius: 4px;
+      cursor: pointer;
+      margin-right: 10px;
+    }
+    button:hover {
+      background-color: #1565c0;
+    }
+    button:disabled {
+      background-color: #ccc;
+      cursor: not-allowed;
+    }
+    .error {
+      color: #d32f2f;
+      background-color: #ffebee;
+      padding: 10px;
+      border-radius: 4px;
+      margin-bottom: 15px;
+    }
+    .success {
+      color: #388e3c;
+      background-color: #e8f5e9;
+      padding: 10px;
+      border-radius: 4px;
+      margin-bottom: 15px;
+    }
+    pre {
+      background-color: #f5f5f5;
+      padding: 10px;
+      border-radius: 4px;
+      overflow-x: auto;
+    }
+    .tabs {
+      display: flex;
+      border-bottom: 1px solid #ddd;
+      margin-bottom: 20px;
+    }
+    .tab {
+      padding: 10px 15px;
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+    }
+    .tab.active {
+      border-bottom: 2px solid #1976d2;
+      font-weight: bold;
+    }
+    .tab-content {
+      display: none;
+    }
+    .tab-content.active {
+      display: block;
+    }
+  </style>
+</head>
+<body>
+  <h1>Login After Logout Test</h1>
+  
+  <div class="tabs">
+    <div class="tab active" data-tab="login">Login</div>
+    <div class="tab" data-tab="status">Authentication Status</div>
+    <div class="tab" data-tab="test">Test API</div>
+  </div>
+  
+  <div class="tab-content active" id="login-tab">
+    <div class="card">
+      <h2>Login Form</h2>
+      <div id="login-error" class="error" style="display: none;"></div>
+      <div id="login-success" class="success" style="display: none;"></div>
+      
+      <form id="login-form">
+        <div class="form-group">
+          <label for="username">Username:</label>
+          <input type="text" id="username" name="username" required>
+        </div>
+        
+        <div class="form-group">
+          <label for="password">Password:</label>
+          <input type="password" id="password" name="password" required>
+        </div>
+        
+        <button type="submit" id="login-button">Login</button>
+        <button type="button" id="clear-auth-button">Clear Auth Data</button>
+      </form>
+      
+      <div style="margin-top: 20px;">
+        <h3>Quick Login:</h3>
+        <button type="button" class="preset-button" data-username="admin" data-password="admin123">Admin User</button>
+        <button type="button" class="preset-button" data-username="user" data-password="password123">Regular User</button>
+        <button type="button" class="preset-button" data-username="abdullah" data-password="password123">Abdullah User</button>
+      </div>
+    </div>
+  </div>
+  
+  <div class="tab-content" id="status-tab">
+    <div class="card">
+      <h2>Authentication Status</h2>
+      <div id="auth-status"></div>
+    </div>
+  </div>
+  
+  <div class="tab-content" id="test-tab">
+    <div class="card">
+      <h2>Test API Endpoints</h2>
+      <div id="api-error" class="error" style="display: none;"></div>
+      <div id="api-success" class="success" style="display: none;"></div>
+      
+      <button type="button" id="test-tank-levels">Test Tank Levels API</button>
+      <button type="button" id="test-stats">Test Stats API</button>
+      <button type="button" id="test-anomalies">Test Anomalies API</button>
+      
+      <div id="api-result" style="margin-top: 20px; display: none;">
+        <h3>API Response:</h3>
+        <pre id="api-response"></pre>
+      </div>
+    </div>
+  </div>
+  
+  <script>
+    // Update authentication status
+    function updateAuthStatus() {
+      const statusDiv = document.getElementById('auth-status');
+      const user = localStorage.getItem('user');
+      const token = localStorage.getItem('token');
+      
+      let html = '';
+      
+      if (user && token) {
+        try {
+          const userData = JSON.parse(user);
+          html += '<div class="success">You are authenticated!</div>';
+          html += '<h3>User:</h3>';
+          html += `<pre>${JSON.stringify(userData, null, 2)}</pre>`;
+          html += '<h3>Token:</h3>';
+          html += `<pre>${token}</pre>`;
+          html += '<button id="logout-button">Logout</button>';
+          html += '<button id="go-to-dashboard">Go to Dashboard</button>';
+        } catch (error) {
+          html += '<div class="error">Error parsing user data</div>';
+          console.error('Error parsing user data:', error);
+        }
+      } else {
+        html += '<div class="error">You are not authenticated.</div>';
+        if (!user) html += '<p>No user found in localStorage.</p>';
+        if (!token) html += '<p>No token found in localStorage.</p>';
+      }
+      
+      statusDiv.innerHTML = html;
+      
+      // Add event listeners to the new buttons
+      const logoutButton = document.getElementById('logout-button');
+      if (logoutButton) {
+        logoutButton.addEventListener('click', handleLogout);
+      }
+      
+      const dashboardButton = document.getElementById('go-to-dashboard');
+      if (dashboardButton) {
+        dashboardButton.addEventListener('click', () => {
+          window.location.href = '/dashboard';
+        });
+      }
+    }
+    
+    // Handle login
+    async function handleLogin(username, password) {
+      const errorDiv = document.getElementById('login-error');
+      const successDiv = document.getElementById('login-success');
+      const loginButton = document.getElementById('login-button');
+      
+      errorDiv.style.display = 'none';
+      successDiv.style.display = 'none';
+      loginButton.disabled = true;
+      loginButton.textContent = 'Logging in...';
+      
+      try {
+        const response = await fetch('http://localhost:8000/api/auth/login', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ username, password })
+        });
+        
+        const data = await response.json();
+        
+        if (!response.ok) {
+          throw new Error(data.detail || 'Login failed');
+        }
+        
+        // Store authentication data
+        localStorage.setItem('user', JSON.stringify(data.user));
+        localStorage.setItem('token', data.access_token);
+        
+        successDiv.textContent = `Login successful for ${username}!`;
+        successDiv.style.display = 'block';
+        
+        // Update auth status
+        updateAuthStatus();
+        
+        // Switch to status tab
+        switchTab('status');
+      } catch (error) {
+        errorDiv.textContent = error.message;
+        errorDiv.style.display = 'block';
+        console.error('Login error:', error);
+      } finally {
+        loginButton.disabled = false;
+        loginButton.textContent = 'Login';
+      }
+    }
+    
+    // Handle logout
+    function handleLogout() {
+      localStorage.removeItem('user');
+      localStorage.removeItem('token');
+      updateAuthStatus();
+      
+      const successDiv = document.getElementById('login-success');
+      successDiv.textContent = 'Logged out successfully!';
+      successDiv.style.display = 'block';
+      
+      // Switch to login tab
+      switchTab('login');
+    }
+    
+    // Test API endpoint
+    async function testApiEndpoint(endpoint) {
+      const errorDiv = document.getElementById('api-error');
+      const successDiv = document.getElementById('api-success');
+      const resultDiv = document.getElementById('api-result');
+      const responseDiv = document.getElementById('api-response');
+      
+      errorDiv.style.display = 'none';
+      successDiv.style.display = 'none';
+      resultDiv.style.display = 'none';
+      
+      const token = localStorage.getItem('token');
+      if (!token) {
+        errorDiv.textContent = 'You need to be authenticated to test API endpoints';
+        errorDiv.style.display = 'block';
+        return;
+      }
+      
+      try {
+        const response = await fetch(`http://localhost:8000/api/${endpoint}`, {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+        
+        const data = await response.json();
+        
+        if (!response.ok) {
+          throw new Error(`API request failed: ${data.detail || 'Unknown error'}`);
+        }
+        
+        successDiv.textContent = `API request to ${endpoint} successful!`;
+        successDiv.style.display = 'block';
+        
+        responseDiv.textContent = JSON.stringify(data, null, 2);
+        resultDiv.style.display = 'block';
+      } catch (error) {
+        errorDiv.textContent = error.message;
+        errorDiv.style.display = 'block';
+        console.error('API error:', error);
+      }
+    }
+    
+    // Switch tabs
+    function switchTab(tabId) {
+      // Update tab buttons
+      document.querySelectorAll('.tab').forEach(tab => {
+        tab.classList.remove('active');
+        if (tab.dataset.tab === tabId) {
+          tab.classList.add('active');
+        }
+      });
+      
+      // Update tab content
+      document.querySelectorAll('.tab-content').forEach(content => {
+        content.classList.remove('active');
+      });
+      document.getElementById(`${tabId}-tab`).classList.add('active');
+      
+      // Update auth status if switching to status tab
+      if (tabId === 'status') {
+        updateAuthStatus();
+      }
+    }
+    
+    // Initialize
+    document.addEventListener('DOMContentLoaded', function() {
+      // Initialize auth status
+      updateAuthStatus();
+      
+      // Set up tab switching
+      document.querySelectorAll('.tab').forEach(tab => {
+        tab.addEventListener('click', () => {
+          switchTab(tab.dataset.tab);
+        });
+      });
+      
+      // Set up login form
+      document.getElementById('login-form').addEventListener('submit', function(e) {
+        e.preventDefault();
+        const username = document.getElementById('username').value;
+        const password = document.getElementById('password').value;
+        handleLogin(username, password);
+      });
+      
+      // Set up preset buttons
+      document.querySelectorAll('.preset-button').forEach(button => {
+        button.addEventListener('click', function() {
+          const username = this.dataset.username;
+          const password = this.dataset.password;
+          document.getElementById('username').value = username;
+          document.getElementById('password').value = password;
+          handleLogin(username, password);
+        });
+      });
+      
+      // Set up clear auth button
+      document.getElementById('clear-auth-button').addEventListener('click', function() {
+        localStorage.removeItem('user');
+        localStorage.removeItem('token');
+        updateAuthStatus();
+        
+        const successDiv = document.getElementById('login-success');
+        successDiv.textContent = 'Authentication data cleared!';
+        successDiv.style.display = 'block';
+      });
+      
+      // Set up API test buttons
+      document.getElementById('test-tank-levels').addEventListener('click', function() {
+        testApiEndpoint('tank-levels');
+      });
+      
+      document.getElementById('test-stats').addEventListener('click', function() {
+        testApiEndpoint('stats');
+      });
+      
+      document.getElementById('test-anomalies').addEventListener('click', function() {
+        testApiEndpoint('anomalies');
+      });
+    });
+  </script>
+</body>
+</html>

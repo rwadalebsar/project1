@@ -1,6 +1,6 @@
 from fastapi import FastAPI, HTTPException, Query, BackgroundTasks, Depends, Header, status
 from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from typing import List, Optional, Dict, Any
 from datetime import datetime, timedelta
 import pandas as pd
@@ -13,6 +13,11 @@ from fastapi.responses import JSONResponse
 from tank_api_service import TankAPIService
 import auth
 from auth import get_current_user, UserInDB
+from mqtt_client import mqtt_client
+from rest_api_client import rest_api_client
+from graphql_client import graphql_client
+from opcua_client import opcua_client
+from modbus_client import modbus_client
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
@@ -451,7 +456,7 @@ async def get_user_reported_anomalies(
     # Check if user is authenticated
     if not user:
         raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
+            status_code=401,
             detail="Authentication required to view reported anomalies",
             headers={"WWW-Authenticate": "Bearer"},
         )
@@ -586,6 +591,1205 @@ async def get_model_feedback(user: Optional[UserInDB] = Depends(get_user_from_he
     except Exception as e:
         logger.error(f"Error getting model feedback: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Error getting model feedback: {str(e)}")
+
+# MQTT API endpoints
+class MQTTConfig(BaseModel):
+    enabled: bool = False
+    broker: str = Field(..., min_length=1)
+    port: int = Field(1883, ge=1, le=65535)
+    username: Optional[str] = None
+    password: Optional[str] = None
+    client_id: Optional[str] = None
+    topic_prefix: str = "tanks"
+    use_ssl: bool = False
+
+@app.get("/api/mqtt/config")
+async def get_mqtt_config(user: Optional[UserInDB] = Depends(get_user_from_header)):
+    """Get MQTT configuration"""
+    # Check if user is authenticated
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Authentication required to view MQTT configuration",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
+    try:
+        config = mqtt_client.get_config()
+
+        # Hide password for security
+        if config.get("password"):
+            config["password"] = "********"
+
+        return config
+    except Exception as e:
+        logger.error(f"Error getting MQTT configuration: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error getting MQTT configuration: {str(e)}"
+        )
+
+@app.put("/api/mqtt/config")
+async def update_mqtt_config(
+    config: MQTTConfig,
+    user: Optional[UserInDB] = Depends(get_user_from_header)
+):
+    """Update MQTT configuration"""
+    # Check if user is authenticated and is admin
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Authentication required to update MQTT configuration",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
+    if not user.is_admin:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Only administrators can update MQTT configuration"
+        )
+
+    try:
+        # Update configuration
+        success = mqtt_client.update_config(config.dict())
+
+        if not success:
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Failed to update MQTT configuration"
+            )
+
+        # Get updated config
+        updated_config = mqtt_client.get_config()
+
+        # Hide password for security
+        if updated_config.get("password"):
+            updated_config["password"] = "********"
+
+        return updated_config
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error updating MQTT configuration: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error updating MQTT configuration: {str(e)}"
+        )
+
+@app.post("/api/mqtt/connect")
+async def connect_mqtt(user: Optional[UserInDB] = Depends(get_user_from_header)):
+    """Connect to MQTT broker"""
+    # Check if user is authenticated and is admin
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Authentication required to connect to MQTT broker",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
+    if not user.is_admin:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Only administrators can connect to MQTT broker"
+        )
+
+    try:
+        # Connect to broker
+        success = mqtt_client.connect()
+
+        if not success:
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail=f"Failed to connect to MQTT broker: {mqtt_client.last_error}"
+            )
+
+        return {"message": "Connected to MQTT broker successfully"}
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error connecting to MQTT broker: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error connecting to MQTT broker: {str(e)}"
+        )
+
+@app.post("/api/mqtt/disconnect")
+async def disconnect_mqtt(user: Optional[UserInDB] = Depends(get_user_from_header)):
+    """Disconnect from MQTT broker"""
+    # Check if user is authenticated and is admin
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Authentication required to disconnect from MQTT broker",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
+    if not user.is_admin:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Only administrators can disconnect from MQTT broker"
+        )
+
+    try:
+        # Disconnect from broker
+        mqtt_client.disconnect()
+
+        return {"message": "Disconnected from MQTT broker successfully"}
+    except Exception as e:
+        logger.error(f"Error disconnecting from MQTT broker: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error disconnecting from MQTT broker: {str(e)}"
+        )
+
+@app.get("/api/mqtt/status")
+async def get_mqtt_status(user: Optional[UserInDB] = Depends(get_user_from_header)):
+    """Get MQTT connection status"""
+    # Check if user is authenticated
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Authentication required to view MQTT status",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
+    try:
+        config = mqtt_client.get_config()
+
+        return {
+            "enabled": config.get("enabled", False),
+            "connected": mqtt_client.connected,
+            "last_error": mqtt_client.last_error,
+            "broker": config.get("broker"),
+            "port": config.get("port"),
+            "topic_prefix": config.get("topic_prefix")
+        }
+    except Exception as e:
+        logger.error(f"Error getting MQTT status: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error getting MQTT status: {str(e)}"
+        )
+
+@app.get("/api/mqtt/data")
+async def get_mqtt_data(user: Optional[UserInDB] = Depends(get_user_from_header)):
+    """Get tank data received from MQTT"""
+    # Check if user is authenticated
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Authentication required to view MQTT data",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
+    try:
+        # Get tank data from MQTT
+        tank_data = mqtt_client.get_tank_data()
+
+        # Convert datetime objects to ISO format strings
+        for item in tank_data:
+            if isinstance(item.get("timestamp"), datetime):
+                item["timestamp"] = item["timestamp"].isoformat()
+
+        return tank_data
+    except Exception as e:
+        logger.error(f"Error getting MQTT data: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error getting MQTT data: {str(e)}"
+        )
+
+@app.post("/api/mqtt/clear-data")
+async def clear_mqtt_data(user: Optional[UserInDB] = Depends(get_user_from_header)):
+    """Clear tank data received from MQTT"""
+    # Check if user is authenticated and is admin
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Authentication required to clear MQTT data",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
+    if not user.is_admin:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Only administrators can clear MQTT data"
+        )
+
+    try:
+        # Clear tank data
+        mqtt_client.clear_tank_data()
+
+        return {"message": "MQTT tank data cleared successfully"}
+    except Exception as e:
+        logger.error(f"Error clearing MQTT data: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error clearing MQTT data: {str(e)}"
+        )
+
+# REST API endpoints
+class RESTAPIConfig(BaseModel):
+    enabled: bool = False
+    base_url: str = Field(..., min_length=1)
+    api_key: Optional[str] = None
+    username: Optional[str] = None
+    password: Optional[str] = None
+    auth_type: str = "none"  # none, api_key, basic, oauth2
+    headers: Dict[str, str] = {}
+    endpoints: Dict[str, str] = {
+        "tanks": "/tanks",
+        "levels": "/tanks/{tank_id}/levels",
+        "auth": "/auth/token"
+    }
+    polling_interval: int = Field(60, ge=5, le=3600)
+
+@app.get("/api/rest/config")
+async def get_rest_config(user: Optional[UserInDB] = Depends(get_user_from_header)):
+    """Get REST API configuration"""
+    # Check if user is authenticated
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Authentication required to view REST API configuration",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
+    try:
+        config = rest_api_client.get_config()
+
+        # Hide sensitive information
+        if config.get("password"):
+            config["password"] = "********"
+        if config.get("api_key"):
+            config["api_key"] = "********"
+
+        return config
+    except Exception as e:
+        logger.error(f"Error getting REST API configuration: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error getting REST API configuration: {str(e)}"
+        )
+
+@app.put("/api/rest/config")
+async def update_rest_config(
+    config: RESTAPIConfig,
+    user: Optional[UserInDB] = Depends(get_user_from_header)
+):
+    """Update REST API configuration"""
+    # Check if user is authenticated and is admin
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Authentication required to update REST API configuration",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
+    if not user.is_admin:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Only administrators can update REST API configuration"
+        )
+
+    try:
+        # Update configuration
+        success = rest_api_client.update_config(config.dict())
+
+        if not success:
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Failed to update REST API configuration"
+            )
+
+        # Get updated config
+        updated_config = rest_api_client.get_config()
+
+        # Hide sensitive information
+        if updated_config.get("password"):
+            updated_config["password"] = "********"
+        if updated_config.get("api_key"):
+            updated_config["api_key"] = "********"
+
+        return updated_config
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error updating REST API configuration: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error updating REST API configuration: {str(e)}"
+        )
+
+@app.post("/api/rest/test")
+async def test_rest_connection(user: Optional[UserInDB] = Depends(get_user_from_header)):
+    """Test connection to REST API"""
+    # Check if user is authenticated
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Authentication required to test REST API connection",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
+    try:
+        # Test connection
+        success = rest_api_client.test_connection()
+
+        if success:
+            return {"success": True, "message": "Successfully connected to REST API"}
+        else:
+            return {"success": False, "message": f"Failed to connect: {rest_api_client.last_error}"}
+    except Exception as e:
+        logger.error(f"Error testing REST API connection: {str(e)}")
+        return {"success": False, "message": f"Error testing connection: {str(e)}"}
+
+@app.get("/api/rest/data")
+async def get_rest_data(user: Optional[UserInDB] = Depends(get_user_from_header)):
+    """Get tank data from REST API"""
+    # Check if user is authenticated
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Authentication required to view REST API data",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
+    try:
+        # Get tank data
+        tank_data = rest_api_client.get_tank_data()
+
+        return tank_data
+    except Exception as e:
+        logger.error(f"Error getting REST API data: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error getting REST API data: {str(e)}"
+        )
+
+@app.post("/api/rest/fetch")
+async def fetch_rest_data(user: Optional[UserInDB] = Depends(get_user_from_header)):
+    """Fetch new tank data from REST API"""
+    # Check if user is authenticated
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Authentication required to fetch REST API data",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
+    try:
+        # Fetch tank data
+        tank_data = rest_api_client.fetch_tank_data()
+
+        return {"message": f"Fetched {len(tank_data)} tank readings from REST API", "data": tank_data}
+    except Exception as e:
+        logger.error(f"Error fetching REST API data: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error fetching REST API data: {str(e)}"
+        )
+
+@app.post("/api/rest/clear-data")
+async def clear_rest_data(user: Optional[UserInDB] = Depends(get_user_from_header)):
+    """Clear tank data received from REST API"""
+    # Check if user is authenticated and is admin
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Authentication required to clear REST API data",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
+    if not user.is_admin:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Only administrators can clear REST API data"
+        )
+
+    try:
+        # Clear tank data
+        rest_api_client.clear_tank_data()
+
+        return {"message": "REST API tank data cleared successfully"}
+    except Exception as e:
+        logger.error(f"Error clearing REST API data: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error clearing REST API data: {str(e)}"
+        )
+
+# GraphQL API endpoints
+class GraphQLConfig(BaseModel):
+    enabled: bool = False
+    endpoint: str = Field(..., min_length=1)
+    api_key: Optional[str] = None
+    username: Optional[str] = None
+    password: Optional[str] = None
+    auth_type: str = "none"  # none, api_key, basic, oauth2, jwt
+    auth_endpoint: Optional[str] = None
+    headers: Dict[str, str] = {}
+    queries: Dict[str, str] = {
+        "tanks": """
+            query GetTanks {
+                tanks {
+                    id
+                    name
+                    capacity
+                }
+            }
+        """,
+        "tankLevel": """
+            query GetTankLevel($tankId: ID!) {
+                tank(id: $tankId) {
+                    id
+                    name
+                    level
+                    lastUpdated
+                }
+            }
+        """
+    }
+    polling_interval: int = Field(60, ge=5, le=3600)
+
+@app.get("/api/graphql/config")
+async def get_graphql_config(user: Optional[UserInDB] = Depends(get_user_from_header)):
+    """Get GraphQL configuration"""
+    # Check if user is authenticated
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Authentication required to view GraphQL configuration",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
+    try:
+        config = graphql_client.get_config()
+
+        # Hide sensitive information
+        if config.get("password"):
+            config["password"] = "********"
+        if config.get("api_key"):
+            config["api_key"] = "********"
+
+        return config
+    except Exception as e:
+        logger.error(f"Error getting GraphQL configuration: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error getting GraphQL configuration: {str(e)}"
+        )
+
+@app.put("/api/graphql/config")
+async def update_graphql_config(
+    config: GraphQLConfig,
+    user: Optional[UserInDB] = Depends(get_user_from_header)
+):
+    """Update GraphQL configuration"""
+    # Check if user is authenticated and is admin
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Authentication required to update GraphQL configuration",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
+    if not user.is_admin:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Only administrators can update GraphQL configuration"
+        )
+
+    try:
+        # Update configuration
+        success = graphql_client.update_config(config.dict())
+
+        if not success:
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Failed to update GraphQL configuration"
+            )
+
+        # Get updated config
+        updated_config = graphql_client.get_config()
+
+        # Hide sensitive information
+        if updated_config.get("password"):
+            updated_config["password"] = "********"
+        if updated_config.get("api_key"):
+            updated_config["api_key"] = "********"
+
+        return updated_config
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error updating GraphQL configuration: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error updating GraphQL configuration: {str(e)}"
+        )
+
+@app.post("/api/graphql/test")
+async def test_graphql_connection(user: Optional[UserInDB] = Depends(get_user_from_header)):
+    """Test connection to GraphQL API"""
+    # Check if user is authenticated
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Authentication required to test GraphQL connection",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
+    try:
+        # Test connection
+        success = graphql_client.test_connection()
+
+        if success:
+            return {"success": True, "message": "Successfully connected to GraphQL API"}
+        else:
+            return {"success": False, "message": f"Failed to connect: {graphql_client.last_error}"}
+    except Exception as e:
+        logger.error(f"Error testing GraphQL connection: {str(e)}")
+        return {"success": False, "message": f"Error testing connection: {str(e)}"}
+
+@app.get("/api/graphql/data")
+async def get_graphql_data(user: Optional[UserInDB] = Depends(get_user_from_header)):
+    """Get tank data from GraphQL API"""
+    # Check if user is authenticated
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Authentication required to view GraphQL data",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
+    try:
+        # Get tank data
+        tank_data = graphql_client.get_tank_data()
+
+        return tank_data
+    except Exception as e:
+        logger.error(f"Error getting GraphQL data: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error getting GraphQL data: {str(e)}"
+        )
+
+@app.post("/api/graphql/fetch")
+async def fetch_graphql_data(user: Optional[UserInDB] = Depends(get_user_from_header)):
+    """Fetch new tank data from GraphQL API"""
+    # Check if user is authenticated
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Authentication required to fetch GraphQL data",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
+    try:
+        # Fetch tank data
+        tank_data = graphql_client.fetch_tank_data()
+
+        return {"message": f"Fetched {len(tank_data)} tank readings from GraphQL API", "data": tank_data}
+    except Exception as e:
+        logger.error(f"Error fetching GraphQL data: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error fetching GraphQL data: {str(e)}"
+        )
+
+@app.post("/api/graphql/clear-data")
+async def clear_graphql_data(user: Optional[UserInDB] = Depends(get_user_from_header)):
+    """Clear tank data received from GraphQL API"""
+    # Check if user is authenticated and is admin
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Authentication required to clear GraphQL data",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
+    if not user.is_admin:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Only administrators can clear GraphQL data"
+        )
+
+    try:
+        # Clear tank data
+        graphql_client.clear_tank_data()
+
+        return {"message": "GraphQL tank data cleared successfully"}
+    except Exception as e:
+        logger.error(f"Error clearing GraphQL data: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error clearing GraphQL data: {str(e)}"
+        )
+
+# OPC UA API endpoints
+class OpcUaConfig(BaseModel):
+    enabled: bool = False
+    endpoint: str = Field(..., min_length=1)
+    security_mode: str = "None"  # None, Sign, SignAndEncrypt
+    security_policy: str = "None"  # None, Basic128Rsa15, Basic256, Basic256Sha256
+    certificate_path: Optional[str] = None
+    private_key_path: Optional[str] = None
+    username: Optional[str] = None
+    password: Optional[str] = None
+    namespace: str = "http://examples.freeopcua.github.io"
+    node_paths: Dict[str, List[str]] = {
+        "tanks": ["Objects", "Server", "Tanks"],
+        "tank_level": ["Objects", "Server", "Tanks", "{tank_id}", "Level"]
+    }
+    polling_interval: int = Field(60, ge=5, le=3600)
+
+@app.get("/api/opcua/config")
+async def get_opcua_config(user: Optional[UserInDB] = Depends(get_user_from_header)):
+    """Get OPC UA configuration"""
+    # Check if user is authenticated
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Authentication required to view OPC UA configuration",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
+    try:
+        config = opcua_client.get_config()
+
+        # Hide sensitive information
+        if config.get("password"):
+            config["password"] = "********"
+
+        return config
+    except Exception as e:
+        logger.error(f"Error getting OPC UA configuration: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error getting OPC UA configuration: {str(e)}"
+        )
+
+@app.put("/api/opcua/config")
+async def update_opcua_config(
+    config: OpcUaConfig,
+    user: Optional[UserInDB] = Depends(get_user_from_header)
+):
+    """Update OPC UA configuration"""
+    # Check if user is authenticated and is admin
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Authentication required to update OPC UA configuration",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
+    if not user.is_admin:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Only administrators can update OPC UA configuration"
+        )
+
+    try:
+        # Update configuration
+        success = opcua_client.update_config(config.dict())
+
+        if not success:
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Failed to update OPC UA configuration"
+            )
+
+        # Get updated config
+        updated_config = opcua_client.get_config()
+
+        # Hide sensitive information
+        if updated_config.get("password"):
+            updated_config["password"] = "********"
+
+        return updated_config
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error updating OPC UA configuration: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error updating OPC UA configuration: {str(e)}"
+        )
+
+@app.post("/api/opcua/test")
+async def test_opcua_connection(user: Optional[UserInDB] = Depends(get_user_from_header)):
+    """Test connection to OPC UA server"""
+    # Check if user is authenticated
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Authentication required to test OPC UA connection",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
+    try:
+        # Test connection
+        success = opcua_client.test_connection()
+
+        if success:
+            return {"success": True, "message": "Successfully connected to OPC UA server"}
+        else:
+            return {"success": False, "message": f"Failed to connect: {opcua_client.last_error}"}
+    except Exception as e:
+        logger.error(f"Error testing OPC UA connection: {str(e)}")
+        return {"success": False, "message": f"Error testing connection: {str(e)}"}
+
+@app.post("/api/opcua/connect")
+async def connect_opcua(user: Optional[UserInDB] = Depends(get_user_from_header)):
+    """Connect to OPC UA server"""
+    # Check if user is authenticated
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Authentication required to connect to OPC UA server",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
+    try:
+        # Connect to server
+        success = opcua_client.connect()
+
+        if success:
+            return {"success": True, "message": "Successfully connected to OPC UA server"}
+        else:
+            return {"success": False, "message": f"Failed to connect: {opcua_client.last_error}"}
+    except Exception as e:
+        logger.error(f"Error connecting to OPC UA server: {str(e)}")
+        return {"success": False, "message": f"Error connecting to server: {str(e)}"}
+
+@app.post("/api/opcua/disconnect")
+async def disconnect_opcua(user: Optional[UserInDB] = Depends(get_user_from_header)):
+    """Disconnect from OPC UA server"""
+    # Check if user is authenticated
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Authentication required to disconnect from OPC UA server",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
+    try:
+        # Disconnect from server
+        success = opcua_client.disconnect()
+
+        if success:
+            return {"success": True, "message": "Successfully disconnected from OPC UA server"}
+        else:
+            return {"success": False, "message": f"Failed to disconnect: {opcua_client.last_error}"}
+    except Exception as e:
+        logger.error(f"Error disconnecting from OPC UA server: {str(e)}")
+        return {"success": False, "message": f"Error disconnecting from server: {str(e)}"}
+
+@app.post("/api/opcua/start-monitoring")
+async def start_opcua_monitoring(user: Optional[UserInDB] = Depends(get_user_from_header)):
+    """Start monitoring OPC UA server"""
+    # Check if user is authenticated
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Authentication required to start OPC UA monitoring",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
+    try:
+        # Start monitoring
+        success = opcua_client.start_monitoring()
+
+        if success:
+            return {"success": True, "message": "Successfully started OPC UA monitoring"}
+        else:
+            return {"success": False, "message": f"Failed to start monitoring: {opcua_client.last_error}"}
+    except Exception as e:
+        logger.error(f"Error starting OPC UA monitoring: {str(e)}")
+        return {"success": False, "message": f"Error starting monitoring: {str(e)}"}
+
+@app.post("/api/opcua/stop-monitoring")
+async def stop_opcua_monitoring(user: Optional[UserInDB] = Depends(get_user_from_header)):
+    """Stop monitoring OPC UA server"""
+    # Check if user is authenticated
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Authentication required to stop OPC UA monitoring",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
+    try:
+        # Stop monitoring
+        success = opcua_client.stop_monitoring()
+
+        if success:
+            return {"success": True, "message": "Successfully stopped OPC UA monitoring"}
+        else:
+            return {"success": False, "message": f"Failed to stop monitoring: {opcua_client.last_error}"}
+    except Exception as e:
+        logger.error(f"Error stopping OPC UA monitoring: {str(e)}")
+        return {"success": False, "message": f"Error stopping monitoring: {str(e)}"}
+
+@app.get("/api/opcua/data")
+async def get_opcua_data(user: Optional[UserInDB] = Depends(get_user_from_header)):
+    """Get tank data from OPC UA server"""
+    # Check if user is authenticated
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Authentication required to view OPC UA data",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
+    try:
+        # Get tank data
+        tank_data = opcua_client.get_tank_data()
+
+        return tank_data
+    except Exception as e:
+        logger.error(f"Error getting OPC UA data: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error getting OPC UA data: {str(e)}"
+        )
+
+@app.post("/api/opcua/fetch")
+async def fetch_opcua_data(user: Optional[UserInDB] = Depends(get_user_from_header)):
+    """Fetch new tank data from OPC UA server"""
+    # Check if user is authenticated
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Authentication required to fetch OPC UA data",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
+    try:
+        # Fetch tank data
+        tank_data = opcua_client.fetch_tank_data()
+
+        return {"message": f"Fetched {len(tank_data)} tank readings from OPC UA server", "data": tank_data}
+    except Exception as e:
+        logger.error(f"Error fetching OPC UA data: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error fetching OPC UA data: {str(e)}"
+        )
+
+@app.post("/api/opcua/clear-data")
+async def clear_opcua_data(user: Optional[UserInDB] = Depends(get_user_from_header)):
+    """Clear tank data received from OPC UA server"""
+    # Check if user is authenticated and is admin
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Authentication required to clear OPC UA data",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
+    if not user.is_admin:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Only administrators can clear OPC UA data"
+        )
+
+    try:
+        # Clear tank data
+        opcua_client.clear_tank_data()
+
+        return {"message": "OPC UA tank data cleared successfully"}
+    except Exception as e:
+        logger.error(f"Error clearing OPC UA data: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error clearing OPC UA data: {str(e)}"
+        )
+
+# Modbus API endpoints
+class ModbusRegister(BaseModel):
+    tank_id: str
+    name: str
+    register_type: str = "holding"  # holding, input, coil, discrete_input
+    address: int
+    data_type: str = "float"  # float, int16, int32, uint16, uint32, bool
+    scaling_factor: float = 1.0
+    offset: float = 0.0
+
+class ModbusConfig(BaseModel):
+    enabled: bool = False
+    mode: str = "tcp"  # tcp or rtu
+    # TCP settings
+    host: Optional[str] = "localhost"
+    port: Optional[int] = 502
+    # RTU settings
+    port_name: Optional[str] = "/dev/ttyUSB0"
+    baudrate: Optional[int] = 9600
+    bytesize: Optional[int] = 8
+    parity: Optional[str] = "N"
+    stopbits: Optional[int] = 1
+    # Common settings
+    unit_id: int = 1
+    timeout: int = 3
+    retries: int = 3
+    tank_registers: List[ModbusRegister] = []
+    polling_interval: int = Field(60, ge=5, le=3600)
+
+@app.get("/api/modbus/config")
+async def get_modbus_config(user: Optional[UserInDB] = Depends(get_user_from_header)):
+    """Get Modbus configuration"""
+    # Check if user is authenticated
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Authentication required to view Modbus configuration",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
+    try:
+        config = modbus_client.get_config()
+        return config
+    except Exception as e:
+        logger.error(f"Error getting Modbus configuration: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error getting Modbus configuration: {str(e)}"
+        )
+
+@app.put("/api/modbus/config")
+async def update_modbus_config(
+    config: ModbusConfig,
+    user: Optional[UserInDB] = Depends(get_user_from_header)
+):
+    """Update Modbus configuration"""
+    # Check if user is authenticated and is admin
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Authentication required to update Modbus configuration",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
+    if not user.is_admin:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Only administrators can update Modbus configuration"
+        )
+
+    try:
+        # Update configuration
+        success = modbus_client.update_config(config.dict())
+
+        if not success:
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Failed to update Modbus configuration"
+            )
+
+        # Get updated config
+        updated_config = modbus_client.get_config()
+        return updated_config
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error updating Modbus configuration: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error updating Modbus configuration: {str(e)}"
+        )
+
+@app.post("/api/modbus/test")
+async def test_modbus_connection(user: Optional[UserInDB] = Depends(get_user_from_header)):
+    """Test connection to Modbus device"""
+    # Check if user is authenticated
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Authentication required to test Modbus connection",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
+    try:
+        # Test connection
+        success = modbus_client.test_connection()
+
+        if success:
+            return {"success": True, "message": "Successfully connected to Modbus device"}
+        else:
+            return {"success": False, "message": f"Failed to connect: {modbus_client.last_error}"}
+    except Exception as e:
+        logger.error(f"Error testing Modbus connection: {str(e)}")
+        return {"success": False, "message": f"Error testing connection: {str(e)}"}
+
+@app.post("/api/modbus/connect")
+async def connect_modbus(user: Optional[UserInDB] = Depends(get_user_from_header)):
+    """Connect to Modbus device"""
+    # Check if user is authenticated
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Authentication required to connect to Modbus device",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
+    try:
+        # Connect to device
+        success = modbus_client.connect()
+
+        if success:
+            return {"success": True, "message": "Successfully connected to Modbus device"}
+        else:
+            return {"success": False, "message": f"Failed to connect: {modbus_client.last_error}"}
+    except Exception as e:
+        logger.error(f"Error connecting to Modbus device: {str(e)}")
+        return {"success": False, "message": f"Error connecting to device: {str(e)}"}
+
+@app.post("/api/modbus/disconnect")
+async def disconnect_modbus(user: Optional[UserInDB] = Depends(get_user_from_header)):
+    """Disconnect from Modbus device"""
+    # Check if user is authenticated
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Authentication required to disconnect from Modbus device",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
+    try:
+        # Disconnect from device
+        success = modbus_client.disconnect()
+
+        if success:
+            return {"success": True, "message": "Successfully disconnected from Modbus device"}
+        else:
+            return {"success": False, "message": f"Failed to disconnect: {modbus_client.last_error}"}
+    except Exception as e:
+        logger.error(f"Error disconnecting from Modbus device: {str(e)}")
+        return {"success": False, "message": f"Error disconnecting from device: {str(e)}"}
+
+@app.post("/api/modbus/start-monitoring")
+async def start_modbus_monitoring(user: Optional[UserInDB] = Depends(get_user_from_header)):
+    """Start monitoring Modbus registers"""
+    # Check if user is authenticated
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Authentication required to start Modbus monitoring",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
+    try:
+        # Start monitoring
+        success = modbus_client.start_monitoring()
+
+        if success:
+            return {"success": True, "message": "Successfully started Modbus monitoring"}
+        else:
+            return {"success": False, "message": f"Failed to start monitoring: {modbus_client.last_error}"}
+    except Exception as e:
+        logger.error(f"Error starting Modbus monitoring: {str(e)}")
+        return {"success": False, "message": f"Error starting monitoring: {str(e)}"}
+
+@app.post("/api/modbus/stop-monitoring")
+async def stop_modbus_monitoring(user: Optional[UserInDB] = Depends(get_user_from_header)):
+    """Stop monitoring Modbus registers"""
+    # Check if user is authenticated
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Authentication required to stop Modbus monitoring",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
+    try:
+        # Stop monitoring
+        success = modbus_client.stop_monitoring()
+
+        if success:
+            return {"success": True, "message": "Successfully stopped Modbus monitoring"}
+        else:
+            return {"success": False, "message": f"Failed to stop monitoring: {modbus_client.last_error}"}
+    except Exception as e:
+        logger.error(f"Error stopping Modbus monitoring: {str(e)}")
+        return {"success": False, "message": f"Error stopping monitoring: {str(e)}"}
+
+@app.get("/api/modbus/data")
+async def get_modbus_data(user: Optional[UserInDB] = Depends(get_user_from_header)):
+    """Get tank data from Modbus registers"""
+    # Check if user is authenticated
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Authentication required to view Modbus data",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
+    try:
+        # Get tank data
+        tank_data = modbus_client.get_tank_data()
+
+        return tank_data
+    except Exception as e:
+        logger.error(f"Error getting Modbus data: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error getting Modbus data: {str(e)}"
+        )
+
+@app.post("/api/modbus/fetch")
+async def fetch_modbus_data(user: Optional[UserInDB] = Depends(get_user_from_header)):
+    """Fetch new tank data from Modbus registers"""
+    # Check if user is authenticated
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Authentication required to fetch Modbus data",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
+    try:
+        # Fetch tank data
+        tank_data = modbus_client.fetch_tank_data()
+
+        return {"message": f"Fetched {len(tank_data)} tank readings from Modbus registers", "data": tank_data}
+    except Exception as e:
+        logger.error(f"Error fetching Modbus data: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error fetching Modbus data: {str(e)}"
+        )
+
+@app.post("/api/modbus/clear-data")
+async def clear_modbus_data(user: Optional[UserInDB] = Depends(get_user_from_header)):
+    """Clear tank data received from Modbus registers"""
+    # Check if user is authenticated and is admin
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Authentication required to clear Modbus data",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
+    if not user.is_admin:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Only administrators can clear Modbus data"
+        )
+
+    try:
+        # Clear tank data
+        modbus_client.clear_tank_data()
+
+        return {"message": "Modbus tank data cleared successfully"}
+    except Exception as e:
+        logger.error(f"Error clearing Modbus data: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error clearing Modbus data: {str(e)}"
+        )
+
+
 
 if __name__ == "__main__":
     import uvicorn
