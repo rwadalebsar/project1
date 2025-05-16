@@ -90,6 +90,10 @@
     "tankId": "Tank ID",
     "confidence": "Confidence",
     "reportMissedAnomaly": "Report Missed Anomaly",
+    "markAsNormal": "Mark as Normal",
+    "markedAsNormal": "Marked as Normal",
+    "errorMarkingNormal": "Error marking anomaly as normal",
+    "feedbackSuccess": "Thank you for your feedback! This helps improve our anomaly detection model.",
     "reportForm": {
       "title": "Report Anomaly",
       "timestamp": "Date & Time",
@@ -176,6 +180,7 @@
     "save": "Save",
     "submit": "Submit",
     "submitting": "Submitting...",
+    "processing": "Processing...",
     "actions": "Actions",
     "delete": "Delete",
     "edit": "Edit",

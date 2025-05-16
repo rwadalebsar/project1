@@ -15,7 +15,7 @@ function SimpleLogin() {
     setResult(null);
 
     try {
-      const response = await axios.post('http://localhost:8000/api/auth/login', {
+      const response = await axios.post('http://localhost:8003/api/auth/login', {
         username,
         password
       });
@@ -34,7 +34,7 @@ function SimpleLogin() {
   return (
     <div style={{ maxWidth: '500px', margin: '0 auto', padding: '20px' }}>
       <h1>Simple Login Test</h1>
-      
+
       <form onSubmit={handleSubmit} style={{ marginBottom: '20px' }}>
         <div style={{ marginBottom: '10px' }}>
           <label style={{ display: 'block', marginBottom: '5px' }}>
@@ -47,7 +47,7 @@ function SimpleLogin() {
             />
           </label>
         </div>
-        
+
         <div style={{ marginBottom: '10px' }}>
           <label style={{ display: 'block', marginBottom: '5px' }}>
             Password:
@@ -59,14 +59,14 @@ function SimpleLogin() {
             />
           </label>
         </div>
-        
-        <button 
-          type="submit" 
+
+        <button
+          type="submit"
           disabled={loading}
-          style={{ 
-            padding: '10px 15px', 
-            background: '#1976d2', 
-            color: 'white', 
+          style={{
+            padding: '10px 15px',
+            background: '#1976d2',
+            color: 'white',
             border: 'none',
             borderRadius: '4px',
             cursor: loading ? 'not-allowed' : 'pointer'
@@ -75,23 +75,23 @@ function SimpleLogin() {
           {loading ? 'Logging in...' : 'Login'}
         </button>
       </form>
-      
+
       {error && (
         <div style={{ padding: '10px', background: '#ffebee', color: '#c62828', marginBottom: '20px', borderRadius: '4px' }}>
           {error}
         </div>
       )}
-      
+
       {result && (
         <div>
           <h2>Login Successful!</h2>
           <div style={{ background: '#e8f5e9', padding: '10px', borderRadius: '4px' }}>
             <h3>User Info:</h3>
             <pre>{JSON.stringify(result.user, null, 2)}</pre>
-            
+
             <h3>Token:</h3>
             <p>{result.access_token}</p>
-            
+
             <h3>Expires At:</h3>
             <p>{result.expires_at}</p>
           </div>

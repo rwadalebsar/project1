@@ -103,6 +103,8 @@ If you see "Error fetching data: Network Error" in the frontend:
 - `GET /api/tank-levels` - Get tank level readings (with optional filtering by days and tank ID)
 - `POST /api/tank-levels` - Add a new tank level reading
 - `GET /api/anomalies` - Get detected anomalies in tank level data
+- `POST /api/anomalies/mark-normal` - Mark an anomaly as normal to improve the model
+- `POST /api/user-anomalies` - Report a missed anomaly
 - `GET /api/stats` - Get statistics about tank levels
 
 ## External Data Source Integration
@@ -152,6 +154,16 @@ The system uses the Isolation Forest algorithm from scikit-learn for anomaly det
 
 3. **Implementation**: The backend processes tank level readings and identifies unusual patterns that might indicate sensor malfunctions, leaks, or other issues.
 
+4. **User Feedback System**: The system incorporates a feedback mechanism that allows users to:
+   - Mark false positive anomalies as normal
+   - Report missed anomalies that the system didn't detect
+   - Improve the model's accuracy over time through continuous learning
+
+5. **Adaptive Learning**: The anomaly detection model adapts based on user feedback:
+   - Readings marked as normal are excluded from future anomaly detection
+   - The system learns patterns of normal behavior specific to each tank
+   - False positive reduction improves alert quality and reduces alert fatigue
+
 ## Future Enhancements
 
 1. **Database Integration**: Replace the JSON file storage with a proper database (PostgreSQL, MongoDB, etc.)
@@ -165,7 +177,13 @@ The system uses the Isolation Forest algorithm from scikit-learn for anomaly det
 
 ## Version History
 
-### v3.0.0 (Current)
+### v3.1.0 (Current)
+- Added "Mark as Normal" feature for anomaly detection feedback
+- Improved machine learning model to incorporate user feedback
+- Enhanced anomaly detection accuracy by learning from user corrections
+- Fixed UI issues with button rendering and styling
+
+### v3.0.0
 - Added multiple connection support for all protocols (MQTT, REST API, GraphQL, OPC UA)
 - Implemented tank-to-connection mapping for flexible data routing
 - Enhanced UI for connection management

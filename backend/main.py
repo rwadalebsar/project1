@@ -84,6 +84,14 @@ class UserReportedAnomalyCreate(BaseModel):
     tank_id: str = "tank1"
     notes: Optional[str] = None
 
+class AnomalyFeedback(BaseModel):
+    timestamp: datetime
+    level: float
+    tank_id: str = "tank1"
+    is_normal: bool = True
+    user_id: Optional[str] = None
+    notes: Optional[str] = None
+
 class SubscriptionTier(BaseModel):
     name: str
     max_tanks: int
@@ -98,9 +106,10 @@ api_service = TankAPIService()
 # Load initial data
 tank_data = api_service.fetch_tank_levels()
 
-# In-memory storage for user-reported anomalies
+# In-memory storage for user-reported anomalies and feedback
 # In a production environment, this would be stored in a database
 user_reported_anomalies = []
+anomaly_feedback = []  # Store user feedback on anomalies (marked as normal)
 
 # Anomaly detection model
 def detect_anomalies(data, contamination=0.01):
@@ -114,6 +123,8 @@ def detect_anomalies(data, contamination=0.01):
     Returns:
         DataFrame with anomaly detection results
     """
+    global anomaly_feedback
+
     if len(data) < 10:  # Need enough data for meaningful detection
         return pd.DataFrame({
             'timestamp': data['timestamp'],
@@ -136,12 +147,35 @@ def detect_anomalies(data, contamination=0.01):
     # Convert predictions (-1 for anomalies, 1 for normal) to boolean
     is_anomaly = [pred == -1 for pred in predictions]
 
-    return pd.DataFrame({
+    # Create result DataFrame
+    result_df = pd.DataFrame({
         'timestamp': data['timestamp'],
         'level': data['level'],
         'is_anomaly': is_anomaly,
         'anomaly_score': scores
     })
+
+    # Apply user feedback to override model predictions
+    # If a user has marked a reading as normal, override the model's prediction
+    if anomaly_feedback:
+        # Convert anomaly_feedback to DataFrame for easier processing
+        feedback_df = pd.DataFrame(anomaly_feedback)
+
+        # For each feedback entry, find matching timestamp and level in result_df and set is_anomaly to False
+        for _, feedback in feedback_df.iterrows():
+            # Find matching entries in result_df
+            matches = result_df[
+                (result_df['timestamp'] == feedback['timestamp']) &
+                (result_df['level'] == feedback['level']) &
+                (result_df['is_anomaly'] == True)  # Only override actual anomalies
+            ]
+
+            # Update is_anomaly to False for matches
+            if not matches.empty:
+                for idx in matches.index:
+                    result_df.at[idx, 'is_anomaly'] = False
+
+    return result_df
 
 @app.get("/")
 def read_root():
@@ -533,6 +567,54 @@ async def update_anomaly_status(
     except Exception as e:
         logger.error(f"Error updating anomaly status: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Error updating anomaly status: {str(e)}")
+
+@app.post("/api/anomalies/mark-normal", response_model=AnomalyFeedback)
+async def mark_anomaly_as_normal(
+    feedback: AnomalyFeedback,
+    user: Optional[UserInDB] = Depends(get_user_from_header)
+):
+    """Mark an anomaly as normal to improve the model"""
+    global anomaly_feedback
+
+    # Check if user is authenticated
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Authentication required to provide feedback",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
+    try:
+        # Add user information to the feedback
+        feedback_dict = feedback.dict()
+        feedback_dict["user_id"] = user.username
+
+        # Check if this feedback already exists
+        existing_feedback = next(
+            (f for f in anomaly_feedback if
+             f["timestamp"] == feedback_dict["timestamp"] and
+             f["level"] == feedback_dict["level"] and
+             f["tank_id"] == feedback_dict["tank_id"]),
+            None
+        )
+
+        if existing_feedback:
+            # Update existing feedback
+            existing_feedback.update(feedback_dict)
+            result = existing_feedback
+        else:
+            # Add new feedback
+            anomaly_feedback.append(feedback_dict)
+            result = feedback_dict
+
+        # In a real implementation, you would save to a database here
+
+        logger.info(f"Anomaly marked as normal by user {user.username}: {feedback_dict}")
+
+        return AnomalyFeedback(**result)
+    except Exception as e:
+        logger.error(f"Error marking anomaly as normal: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error marking anomaly as normal: {str(e)}")
 
 @app.get("/api/model-feedback")
 async def get_model_feedback(user: Optional[UserInDB] = Depends(get_user_from_header)):

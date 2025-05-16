@@ -469,7 +469,7 @@
         loginButton.textContent = currentLanguage === 'ar' ? 'جاري تسجيل الدخول...' : 'Logging in...';
 
         try {
-          const response = await fetch('http://localhost:8000/api/auth/login', {
+          const response = await fetch('http://localhost:8003/api/auth/login', {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json'

@@ -389,7 +389,56 @@ const ModernAddReading = ({ newLevel, setNewLevel, handleAddReading }) => {
 };
 
 // Modern Anomalies List Component
-const ModernAnomaliesList = ({ anomalies }) => {
+const ModernAnomaliesList = ({ anomalies, apiConfig, onMarkAsNormal }) => {
+  const { t } = useTranslation();
+  const [markedAnomalies, setMarkedAnomalies] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+
+  const handleMarkAsNormal = async (anomaly) => {
+    try {
+      setLoading(true);
+      setError(null);
+
+      const token = localStorage.getItem('token');
+
+      // Call the API to mark the anomaly as normal
+      const response = await axios.post(
+        `${apiConfig.apiUrl}/api/anomalies/mark-normal`,
+        {
+          timestamp: anomaly.timestamp,
+          level: anomaly.level,
+          tank_id: apiConfig.tankId,
+          is_normal: true,
+          notes: "Marked as normal by user"
+        },
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        }
+      );
+
+      // Add to local state to update UI immediately
+      setMarkedAnomalies([...markedAnomalies, anomaly.timestamp]);
+
+      // Call the callback to refresh data if provided
+      if (onMarkAsNormal) {
+        onMarkAsNormal();
+      }
+    } catch (err) {
+      console.error('Error marking anomaly as normal:', err);
+      setError(t('anomalies.errorMarkingNormal'));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Check if an anomaly has been marked as normal
+  const isMarkedAsNormal = (timestamp) => {
+    return markedAnomalies.includes(timestamp);
+  };
+
   return (
     <div className="card">
       <div className="card-header">
@@ -398,6 +447,20 @@ const ModernAnomaliesList = ({ anomalies }) => {
           <Icons.Alert />
         </div>
       </div>
+
+      {error && (
+        <div style={{
+          padding: '12px',
+          backgroundColor: '#FEE2E2',
+          color: '#991B1B',
+          borderRadius: '8px',
+          margin: '12px',
+          border: '1px solid #FECACA'
+        }}>
+          {error}
+        </div>
+      )}
+
       <table style={{ width: '100%', borderCollapse: 'collapse' }}>
         <thead>
           <tr>
@@ -405,6 +468,7 @@ const ModernAnomaliesList = ({ anomalies }) => {
             <th style={{ padding: '12px', textAlign: 'left', borderBottom: '1px solid var(--gray-200)' }}>Time</th>
             <th style={{ padding: '12px', textAlign: 'left', borderBottom: '1px solid var(--gray-200)' }}>Level (m)</th>
             <th style={{ padding: '12px', textAlign: 'left', borderBottom: '1px solid var(--gray-200)' }}>Anomaly Score</th>
+            <th style={{ padding: '12px', textAlign: 'left', borderBottom: '1px solid var(--gray-200)' }}>Actions</th>
           </tr>
         </thead>
         <tbody>
@@ -414,6 +478,24 @@ const ModernAnomaliesList = ({ anomalies }) => {
               <td style={{ padding: '12px', borderBottom: '1px solid var(--gray-200)' }}>{new Date(anomaly.timestamp).toLocaleTimeString()}</td>
               <td style={{ padding: '12px', borderBottom: '1px solid var(--gray-200)' }}>{anomaly.level.toFixed(2)}</td>
               <td style={{ padding: '12px', borderBottom: '1px solid var(--gray-200)' }}>{anomaly.anomaly_score.toFixed(4)}</td>
+              <td style={{ padding: '12px', borderBottom: '1px solid var(--gray-200)' }}>
+                {isMarkedAsNormal(anomaly.timestamp) ? (
+                  <span style={{ color: 'var(--green-600)', display: 'flex', alignItems: 'center' }}>
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="16" height="16" style={{ marginRight: '4px' }}>
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                    </svg>
+                    {t('anomalies.markedAsNormal')}
+                  </span>
+                ) : (
+                  <button
+                    onClick={() => handleMarkAsNormal(anomaly)}
+                    disabled={loading}
+                    className="btn btn-primary"
+                  >
+                    {loading ? t('common.processing') : t('anomalies.markAsNormal')}
+                  </button>
+                )}
+              </td>
             </tr>
           ))}
         </tbody>
@@ -458,7 +540,7 @@ function ModernApp({ initialTab = 'dashboard' }) {
     const savedConfig = localStorage.getItem('tankApiConfig')
     // Force update the API URL to ensure it's correct
     const defaultConfig = {
-      apiUrl: 'http://localhost:8000',
+      apiUrl: 'http://localhost:8003',
       apiKey: '',
       tankId: 'tank1',
       useMockData: true
@@ -469,7 +551,7 @@ function ModernApp({ initialTab = 'dashboard' }) {
       // Always use the correct API URL
       return {
         ...parsedConfig,
-        apiUrl: 'http://localhost:8000'
+        apiUrl: 'http://localhost:8003'
       }
     }
 
@@ -1000,7 +1082,11 @@ function ModernApp({ initialTab = 'dashboard' }) {
                     <ModernAnomaliesChart data={tankLevels} anomalies={anomalies} />
                   </div>
                   <div className="col-span-6">
-                    <ModernAnomaliesList anomalies={anomalies} />
+                    <ModernAnomaliesList
+                      anomalies={anomalies}
+                      apiConfig={apiConfig}
+                      onMarkAsNormal={fetchData}
+                    />
                     <div style={{ marginTop: '1rem', textAlign: 'center' }}>
                       <button
                         className="btn btn-secondary"
