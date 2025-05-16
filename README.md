@@ -164,6 +164,25 @@ The system uses the Isolation Forest algorithm from scikit-learn for anomaly det
    - The system learns patterns of normal behavior specific to each tank
    - False positive reduction improves alert quality and reduces alert fatigue
 
+## Deployment
+
+The application can be deployed to Google Cloud Run for a scalable, containerized deployment. For detailed deployment instructions, see [DEPLOYMENT.md](DEPLOYMENT.md).
+
+### Quick Deployment Steps
+
+1. Install the [Google Cloud SDK](https://cloud.google.com/sdk/docs/install)
+2. Run the deployment script: `./deploy-to-cloud-run.sh`
+3. Access your application at the provided URLs
+
+### Docker Support
+
+The application includes Docker configuration for both local development and production deployment:
+
+```bash
+# Run locally with Docker Compose
+docker-compose up --build
+```
+
 ## Future Enhancements
 
 1. **Database Integration**: Replace the JSON file storage with a proper database (PostgreSQL, MongoDB, etc.)
@@ -174,6 +193,7 @@ The system uses the Isolation Forest algorithm from scikit-learn for anomaly det
 6. **Additional Protocols**: Add support for more industrial protocols (Modbus, BACnet, etc.)
 7. **Advanced Analytics**: Implement predictive maintenance and trend analysis
 8. **Reporting System**: Add customizable reports and scheduled exports
+9. **CI/CD Pipeline**: Set up continuous integration and deployment for automated testing and deployment
 
 ## Version History
 

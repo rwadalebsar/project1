@@ -1,0 +1,63 @@
+steps:
+  # Build the backend image
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['build', '-t', '${_REGION}-docker.pkg.dev/${PROJECT_ID}/tank-repo/backend:${_VERSION}', './backend']
+
+  # Build the frontend image
+  - name: 'gcr.io/cloud-builders/docker'
+    args: [
+      'build',
+      '-t', '${_REGION}-docker.pkg.dev/${PROJECT_ID}/tank-repo/frontend:${_VERSION}',
+      '--build-arg', 'VITE_API_URL=${_BACKEND_URL}',
+      './frontend'
+    ]
+
+  # Push the backend image
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['push', '${_REGION}-docker.pkg.dev/${PROJECT_ID}/tank-repo/backend:${_VERSION}']
+
+  # Push the frontend image
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['push', '${_REGION}-docker.pkg.dev/${PROJECT_ID}/tank-repo/frontend:${_VERSION}']
+
+  # Deploy backend to Cloud Run
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    entrypoint: gcloud
+    args: [
+      'run', 'deploy', 'tank-backend',
+      '--image', '${_REGION}-docker.pkg.dev/${PROJECT_ID}/tank-repo/backend:${_VERSION}',
+      '--region', '${_REGION}',
+      '--platform', 'managed',
+      '--allow-unauthenticated',
+      '--memory', '512Mi',
+      '--cpu', '1',
+      '--min-instances', '0',
+      '--max-instances', '10'
+    ]
+
+  # Deploy frontend to Cloud Run
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    entrypoint: gcloud
+    args: [
+      'run', 'deploy', 'tank-frontend',
+      '--image', '${_REGION}-docker.pkg.dev/${PROJECT_ID}/tank-repo/frontend:${_VERSION}',
+      '--region', '${_REGION}',
+      '--platform', 'managed',
+      '--allow-unauthenticated',
+      '--memory', '256Mi',
+      '--cpu', '1',
+      '--min-instances', '0',
+      '--max-instances', '5',
+      '--set-env-vars', 'VITE_API_URL=${_BACKEND_URL}'
+    ]
+
+substitutions:
+  _VERSION: 'latest'
+  _REGION: 'us-central1'
+  _BACKEND_URL: 'https://tank-backend-abcdef-uc.a.run.app'
+
+images:
+  - '${_REGION}-docker.pkg.dev/${PROJECT_ID}/tank-repo/backend:${_VERSION}'
+  - '${_REGION}-docker.pkg.dev/${PROJECT_ID}/tank-repo/frontend:${_VERSION}'
+
+timeout: 1800s
