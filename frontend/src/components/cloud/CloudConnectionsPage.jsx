@@ -56,8 +56,19 @@ const CloudConnectionsPage = () => {
         <Typography variant="h4" component="h1" gutterBottom>
           {t('cloudConnections.title')}
         </Typography>
-        <Typography variant="body1" color="text.secondary">
+        <Typography variant="body1" color="text.secondary" sx={{ mb: 2 }}>
           {t('cloudConnections.description')}
+        </Typography>
+        <Typography variant="body2" sx={{
+          backgroundColor: '#f0f9ff',
+          padding: '10px',
+          borderRadius: '4px',
+          borderLeft: '4px solid #3b82f6'
+        }}>
+          <strong>Note:</strong> Each connection can now be linked to a specific tank.
+          Configure your connections and select the appropriate tank for each one to
+          ensure data is properly routed. You can manage your tanks from the dashboard
+          or when configuring each connection.
         </Typography>
       </Box>
 

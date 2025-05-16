@@ -227,6 +227,12 @@
   },
   "rest": {
     "configuration": "REST API Configuration",
+    "connections": "REST API Connections",
+    "connectionName": "Connection Name",
+    "connectionNameHelp": "A name to identify this connection",
+    "addConnection": "Add Connection",
+    "deleteConnection": "Delete Connection",
+    "associatedTank": "Associated Tank",
     "enabled": "Enable REST API",
     "baseUrl": "Base URL",
     "baseUrlHelp": "Base URL of the REST API (e.g., https://api.example.com)",
@@ -269,6 +275,12 @@
   },
   "graphql": {
     "configuration": "GraphQL Configuration",
+    "connections": "GraphQL Connections",
+    "connectionName": "Connection Name",
+    "connectionNameHelp": "A name to identify this connection",
+    "addConnection": "Add Connection",
+    "deleteConnection": "Delete Connection",
+    "associatedTank": "Associated Tank",
     "enabled": "Enable GraphQL",
     "endpoint": "GraphQL Endpoint",
     "endpointHelp": "URL of the GraphQL endpoint (e.g., https://api.example.com/graphql)",
@@ -307,6 +319,12 @@
   },
   "opcua": {
     "configuration": "OPC UA Configuration",
+    "connections": "OPC UA Connections",
+    "connectionName": "Connection Name",
+    "connectionNameHelp": "A name to identify this connection",
+    "addConnection": "Add Connection",
+    "deleteConnection": "Delete Connection",
+    "associatedTank": "Associated Tank",
     "enabled": "Enable OPC UA",
     "endpoint": "OPC UA Endpoint",
     "endpointHelp": "OPC UA server endpoint (e.g., opc.tcp://localhost:4840/freeopcua/server/)",
@@ -354,7 +372,9 @@
     "noData": "No data received from OPC UA server yet",
     "tankId": "Tank ID",
     "tankName": "Tank Name",
-    "level": "Level"
+    "level": "Level",
+    "fetchData": "Fetch Data",
+    "clearData": "Clear Data"
   },
   "direction": "ltr",
   "navigation": {

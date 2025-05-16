@@ -9,6 +9,7 @@ import UserAnomaliesList from './components/anomalies/UserAnomaliesList'
 import ModelFeedback from './components/anomalies/ModelFeedback'
 import CloudConnectionsPage from './components/cloud/CloudConnectionsPage'
 import SubscriptionPage from './components/subscription/SubscriptionPage'
+import TankSelector from './components/tanks/TankSelector'
 import './modern.css'
 import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend,
@@ -253,14 +254,24 @@ const ModernStats = ({ stats }) => {
 };
 
 // Modern API Configuration Component
-const ModernApiConfig = ({ apiConfig, setApiConfig, onSave, showConfig, setShowConfig }) => {
+const ModernApiConfig = ({ apiConfig, setApiConfig, onSave, showConfig, setShowConfig, availableTanks }) => {
   const [tempConfig, setTempConfig] = useState({ ...apiConfig })
+  const [selectedTank, setSelectedTank] = useState(apiConfig.tankId || 'tank1')
+  const { t } = useTranslation()
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target
     setTempConfig({
       ...tempConfig,
       [name]: type === 'checkbox' ? checked : value
+    })
+  }
+
+  const handleTankChange = (tankId) => {
+    setSelectedTank(tankId)
+    setTempConfig({
+      ...tempConfig,
+      tankId: tankId
     })
   }
 
@@ -276,14 +287,14 @@ const ModernApiConfig = ({ apiConfig, setApiConfig, onSave, showConfig, setShowC
     <div className="config-overlay">
       <div className="config-modal">
         <div className="card-header">
-          <h3 className="card-title">API Configuration</h3>
+          <h3 className="card-title">{t('app.apiConfiguration')}</h3>
           <button className="btn btn-icon" onClick={() => setShowConfig(false)}>
             <Icons.Close />
           </button>
         </div>
         <form onSubmit={handleSubmit}>
           <div className="form-group">
-            <label className="form-label" htmlFor="apiUrl">API URL:</label>
+            <label className="form-label" htmlFor="apiUrl">{t('app.apiUrl')}:</label>
             <input
               className="form-control"
               type="text"
@@ -296,7 +307,7 @@ const ModernApiConfig = ({ apiConfig, setApiConfig, onSave, showConfig, setShowC
           </div>
 
           <div className="form-group">
-            <label className="form-label" htmlFor="apiKey">API Key:</label>
+            <label className="form-label" htmlFor="apiKey">{t('app.apiKey')}:</label>
             <input
               className="form-control"
               type="text"
@@ -309,16 +320,14 @@ const ModernApiConfig = ({ apiConfig, setApiConfig, onSave, showConfig, setShowC
           </div>
 
           <div className="form-group">
-            <label className="form-label" htmlFor="tankId">Tank ID:</label>
-            <input
-              className="form-control"
-              type="text"
-              id="tankId"
-              name="tankId"
-              value={tempConfig.tankId}
-              onChange={handleChange}
-              placeholder="tank1"
-            />
+            <label className="form-label">{t('tanks.selectTank')}:</label>
+            <div style={{ marginBottom: '10px' }}>
+              <TankSelector
+                selectedTank={selectedTank}
+                onSelectTank={handleTankChange}
+                showAddButton={true}
+              />
+            </div>
           </div>
 
           <div className="form-group">
@@ -329,18 +338,18 @@ const ModernApiConfig = ({ apiConfig, setApiConfig, onSave, showConfig, setShowC
                 checked={tempConfig.useMockData}
                 onChange={handleChange}
               />
-              Use Mock Data (Enable if you don't have a real API endpoint)
+              {t('app.useMockData')}
             </label>
           </div>
 
           <div className="config-actions">
-            <button type="submit" className="btn btn-success">Save Configuration</button>
+            <button type="submit" className="btn btn-success">{t('common.save')}</button>
             <button
               type="button"
               className="btn btn-secondary"
               onClick={() => setShowConfig(false)}
             >
-              Cancel
+              {t('common.cancel')}
             </button>
           </div>
         </form>
@@ -447,18 +456,58 @@ function ModernApp({ initialTab = 'dashboard' }) {
   const [apiConfig, setApiConfig] = useState(() => {
     // Try to load from localStorage
     const savedConfig = localStorage.getItem('tankApiConfig')
-    return savedConfig ? JSON.parse(savedConfig) : {
-      apiUrl: import.meta.env.VITE_API_URL || 'http://localhost:8000',
+    // Force update the API URL to ensure it's correct
+    const defaultConfig = {
+      apiUrl: 'http://localhost:8000',
       apiKey: '',
       tankId: 'tank1',
       useMockData: true
     }
+
+    if (savedConfig) {
+      const parsedConfig = JSON.parse(savedConfig)
+      // Always use the correct API URL
+      return {
+        ...parsedConfig,
+        apiUrl: 'http://localhost:8000'
+      }
+    }
+
+    return defaultConfig
+  })
+
+  // Load tanks from localStorage
+  const [availableTanks, setAvailableTanks] = useState(() => {
+    const savedTanks = localStorage.getItem('tanks')
+    if (savedTanks) {
+      try {
+        const parsedTanks = JSON.parse(savedTanks)
+        if (Array.isArray(parsedTanks) && parsedTanks.length > 0) {
+          return parsedTanks
+        }
+      } catch (error) {
+        console.error('Error parsing tanks from localStorage:', error)
+      }
+    }
+    // Default tanks if none found in localStorage
+    return [
+      { id: 'tank1', name: 'Tank 1 - Main Storage', description: 'Main water storage tank' },
+      { id: 'tank2', name: 'Tank 2 - Secondary Storage', description: 'Secondary water storage tank' },
+      { id: 'tank3', name: 'Tank 3 - Reserve', description: 'Reserve water storage tank' }
+    ]
   })
 
   // Save API config to localStorage when it changes
   useEffect(() => {
     localStorage.setItem('tankApiConfig', JSON.stringify(apiConfig))
+    console.log('API Config updated:', apiConfig)
   }, [apiConfig])
+
+  // Save tanks to localStorage when they change
+  useEffect(() => {
+    localStorage.setItem('tanks', JSON.stringify(availableTanks))
+    console.log('Available tanks updated:', availableTanks)
+  }, [availableTanks])
 
   // Fetch data when timeRange or apiConfig changes
   useEffect(() => {
@@ -468,6 +517,9 @@ function ModernApp({ initialTab = 'dashboard' }) {
   const fetchData = async () => {
     try {
       setLoading(true)
+      setError(null) // Clear any previous errors
+
+      console.log(`Fetching data from: ${apiConfig.apiUrl}/api/tank-levels?days=${timeRange}&tank_id=${apiConfig.tankId}`)
 
       const headers = apiConfig.apiKey ? {
         'Authorization': `Bearer ${apiConfig.apiKey}`
@@ -476,8 +528,13 @@ function ModernApp({ initialTab = 'dashboard' }) {
       // Fetch tank levels for the selected time range
       const levelsResponse = await axios.get(
         `${apiConfig.apiUrl}/api/tank-levels?days=${timeRange}&tank_id=${apiConfig.tankId}`,
-        { headers }
+        {
+          headers,
+          timeout: 5000 // Set a timeout to avoid hanging
+        }
       )
+
+      console.log('Data received:', levelsResponse.data.length, 'records')
 
       // Sort by timestamp (oldest first for charts)
       const sortedData = [...levelsResponse.data].sort((a, b) =>
@@ -518,8 +575,38 @@ function ModernApp({ initialTab = 'dashboard' }) {
 
       setError(null)
     } catch (err) {
-      setError(t('errors.fetchError', { message: err.message }))
       console.error('Error fetching data:', err)
+
+      // Provide more detailed error messages
+      if (err.code === 'ECONNREFUSED') {
+        setError(`${t('errors.connectionRefused')} - The backend server is not running or not accessible at ${apiConfig.apiUrl}. Please check your API configuration.`)
+      } else if (err.code === 'ETIMEDOUT' || err.code === 'TIMEOUT') {
+        setError(`${t('errors.timeout')} - The request to ${apiConfig.apiUrl} timed out. Please check your network connection.`)
+      } else if (err.response) {
+        // The request was made and the server responded with a status code
+        // that falls out of the range of 2xx
+        setError(`${t('errors.serverError')} (${err.response.status}): ${err.response.data.detail || err.message}`)
+      } else if (err.request) {
+        // The request was made but no response was received
+        setError(`${t('errors.noResponse')} - No response received from ${apiConfig.apiUrl}. Please check your network connection.`)
+      } else {
+        // Something happened in setting up the request that triggered an Error
+        setError(`${t('errors.fetchError')}: ${err.message}`)
+      }
+
+      // Set empty data to avoid crashes
+      setTankLevels([])
+      setRecentLevels([])
+      setAnomalies([])
+      setStats({
+        current_level: 0,
+        min_level: 0,
+        max_level: 0,
+        avg_level: 0,
+        std_dev: 0,
+        count: 0,
+        last_updated: new Date().toISOString()
+      })
     } finally {
       setLoading(false)
     }
@@ -709,22 +796,39 @@ function ModernApp({ initialTab = 'dashboard' }) {
               </h1>
             </div>
             <div className="header-actions">
-              {activeTab !== 'user-anomalies' && (
-                <div className="form-group" style={{ margin: 0, display: 'flex', alignItems: 'center', gap: '10px' }}>
-                  <label className="form-label" style={{ margin: 0 }}>{t('dashboard.timeRange')}:</label>
-                  <select
-                    className="form-select"
-                    value={timeRange}
-                    onChange={handleTimeRangeChange}
-                    style={{ width: 'auto' }}
-                  >
-                    <option value={7}>{t('dashboard.last7Days')}</option>
-                    <option value={30}>{t('dashboard.last30Days')}</option>
-                    <option value={90}>{t('dashboard.last3Months')}</option>
-                    <option value={180}>{t('dashboard.last6Months')}</option>
-                    <option value={365}>{t('dashboard.last12Months')}</option>
-                  </select>
-                </div>
+              {activeTab !== 'user-anomalies' && activeTab !== 'cloud-connections' && (
+                <>
+                  <div className="form-group" style={{ margin: 0, display: 'flex', alignItems: 'center', gap: '10px' }}>
+                    <label className="form-label" style={{ margin: 0 }}>{t('dashboard.timeRange')}:</label>
+                    <select
+                      className="form-select"
+                      value={timeRange}
+                      onChange={handleTimeRangeChange}
+                      style={{ width: 'auto' }}
+                    >
+                      <option value={7}>{t('dashboard.last7Days')}</option>
+                      <option value={30}>{t('dashboard.last30Days')}</option>
+                      <option value={90}>{t('dashboard.last3Months')}</option>
+                      <option value={180}>{t('dashboard.last6Months')}</option>
+                      <option value={365}>{t('dashboard.last12Months')}</option>
+                    </select>
+                  </div>
+
+                  <div className="form-group" style={{ margin: 0, marginLeft: '15px', minWidth: '200px' }}>
+                    <TankSelector
+                      selectedTank={apiConfig.tankId}
+                      onSelectTank={(tankId) => {
+                        setApiConfig({
+                          ...apiConfig,
+                          tankId
+                        })
+                        // Refresh data after changing tank
+                        setTimeout(() => fetchData(), 100)
+                      }}
+                      showAddButton={false}
+                    />
+                  </div>
+                </>
               )}
               <button className="btn btn-primary" onClick={fetchData}>
                 <Icons.Refresh /> <span className="btn-text">{t('common.refresh')}</span>
@@ -743,6 +847,7 @@ function ModernApp({ initialTab = 'dashboard' }) {
           onSave={handleSaveConfig}
           showConfig={showConfig}
           setShowConfig={setShowConfig}
+          availableTanks={availableTanks}
         />
 
         {/* Error Message */}

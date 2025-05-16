@@ -1,0 +1,1899 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login Test</title>
+    <!-- React CDN Links -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script crossorigin src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+    <!-- Chart.js for data visualization -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns"></script>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f0f2f5;
+            color: #333;
+        }
+        #root {
+            max-width: 1000px;
+            margin: 0 auto;
+            background-color: white;
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #eee;
+        }
+        .logo {
+            font-size: 24px;
+            font-weight: bold;
+            color: #4361ee;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #555;
+        }
+        input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            box-sizing: border-box;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+        input:focus {
+            outline: none;
+            border-color: #4361ee;
+            box-shadow: 0 0 0 2px rgba(67, 97, 238, 0.2);
+        }
+        .button {
+            background-color: #4361ee;
+            color: white;
+            padding: 12px 24px;
+            text-align: center;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            margin-top: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            transition: background-color 0.3s;
+        }
+        .button:hover {
+            background-color: #3a56d4;
+        }
+        .button:disabled {
+            background-color: #a0aec0;
+            cursor: not-allowed;
+        }
+        .error {
+            color: #e53e3e;
+            margin-top: 15px;
+            padding: 12px;
+            background-color: #fff5f5;
+            border-radius: 6px;
+            border-left: 4px solid #e53e3e;
+        }
+        .success {
+            color: #38a169;
+            margin-top: 15px;
+            padding: 12px;
+            background-color: #f0fff4;
+            border-radius: 6px;
+            border-left: 4px solid #38a169;
+        }
+        .dashboard {
+            margin-top: 25px;
+        }
+        .card {
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+        }
+        .card-title {
+            margin-top: 0;
+            margin-bottom: 15px;
+            font-size: 18px;
+            color: #4a5568;
+        }
+        .stat {
+            font-size: 28px;
+            font-weight: bold;
+            margin-bottom: 8px;
+            color: #2d3748;
+        }
+        .stat-label {
+            color: #718096;
+            font-size: 14px;
+        }
+        .loading {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 40px;
+        }
+        .spinner {
+            border: 4px solid rgba(0, 0, 0, 0.1);
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            border-left-color: #4361ee;
+            animation: spin 1s linear infinite;
+            margin-right: 10px;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        th {
+            background-color: #f9fafb;
+            padding: 12px 15px;
+            text-align: left;
+            font-weight: 600;
+            color: #4a5568;
+            border-bottom: 2px solid #e2e8f0;
+        }
+        td {
+            padding: 12px 15px;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        tr:last-child td {
+            border-bottom: none;
+        }
+        tr:nth-child(even) {
+            background-color: #f9fafb;
+        }
+        .login-container {
+            max-width: 400px;
+            margin: 0 auto;
+            padding: 30px;
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        .login-title {
+            text-align: center;
+            margin-bottom: 25px;
+            color: #2d3748;
+        }
+        .login-subtitle {
+            text-align: center;
+            margin-bottom: 30px;
+            color: #718096;
+            font-size: 16px;
+        }
+        .login-footer {
+            margin-top: 25px;
+            text-align: center;
+            color: #718096;
+            font-size: 14px;
+        }
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            background-color: #4361ee;
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 18px;
+        }
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        // Tank Level Chart Component with Anomaly Detection
+        function TankLevelChart({ data, onAnomalyClick }) {
+            const chartRef = React.useRef(null);
+            const [chart, setChart] = React.useState(null);
+
+            // Make the anomaly click handler available globally for the chart
+            React.useEffect(() => {
+                window.handleAnomalyClick = onAnomalyClick;
+
+                return () => {
+                    window.handleAnomalyClick = null;
+                };
+            }, [onAnomalyClick]);
+
+            // Function to detect anomalies (simplified version)
+            const detectAnomalies = (data) => {
+                if (!data || data.length < 3) return [];
+
+                // Calculate mean and standard deviation
+                const levels = data.map(item => item.level);
+                const mean = levels.reduce((sum, val) => sum + val, 0) / levels.length;
+                const variance = levels.reduce((sum, val) => sum + Math.pow(val - mean, 2), 0) / levels.length;
+                const stdDev = Math.sqrt(variance);
+
+                // Mark points as anomalies if they are more than 2 standard deviations from the mean
+                const threshold = 2 * stdDev;
+
+                return data.map(item => ({
+                    ...item,
+                    isAnomaly: Math.abs(item.level - mean) > threshold
+                }));
+            };
+
+            React.useEffect(() => {
+                // If no data, don't render chart
+                if (!data || data.length === 0) return;
+
+                // Sort data by timestamp (oldest first for the chart)
+                const sortedData = [...data].sort((a, b) =>
+                    new Date(a.timestamp) - new Date(b.timestamp)
+                );
+
+                // Detect anomalies
+                const dataWithAnomalies = detectAnomalies(sortedData);
+
+                // Separate normal and anomaly data points
+                const normalData = dataWithAnomalies.map(item =>
+                    item.isAnomaly ? null : item.level
+                );
+
+                const anomalyData = dataWithAnomalies.map(item =>
+                    item.isAnomaly ? item.level : null
+                );
+
+                // Prepare data for Chart.js
+                const chartData = {
+                    labels: sortedData.map(item => new Date(item.timestamp)),
+                    datasets: [
+                        {
+                            label: 'Tank Level (m)',
+                            data: normalData,
+                            borderColor: '#4361ee',
+                            backgroundColor: 'rgba(67, 97, 238, 0.1)',
+                            borderWidth: 2,
+                            fill: true,
+                            tension: 0.3,
+                            pointRadius: 3,
+                            pointBackgroundColor: '#4361ee',
+                            pointBorderColor: '#fff',
+                            pointBorderWidth: 1,
+                            pointHoverRadius: 5,
+                            pointHoverBackgroundColor: '#4361ee',
+                            pointHoverBorderColor: '#fff',
+                            pointHoverBorderWidth: 2,
+                        },
+                        {
+                            label: 'Anomalies',
+                            data: anomalyData,
+                            borderColor: '#e53e3e',
+                            backgroundColor: '#e53e3e',
+                            borderWidth: 0,
+                            fill: false,
+                            tension: 0,
+                            pointRadius: 6,
+                            pointStyle: 'triangle',
+                            pointBackgroundColor: '#e53e3e',
+                            pointBorderColor: '#fff',
+                            pointBorderWidth: 1,
+                            pointHoverRadius: 8,
+                            pointHoverBackgroundColor: '#e53e3e',
+                            pointHoverBorderColor: '#fff',
+                            pointHoverBorderWidth: 2,
+                        }
+                    ]
+                };
+
+                // Chart configuration
+                const config = {
+                    type: 'line',
+                    data: chartData,
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        interaction: {
+                            mode: 'index',
+                            intersect: false,
+                        },
+                        onClick: (event, elements) => {
+                            if (elements.length > 0) {
+                                const element = elements[0];
+                                // Check if clicked on anomaly point
+                                if (element.datasetIndex === 1) {
+                                    const index = element.index;
+                                    const anomaly = dataWithAnomalies[index];
+                                    if (anomaly && anomaly.isAnomaly) {
+                                        // Pass the anomaly to parent component
+                                        if (window.handleAnomalyClick) {
+                                            window.handleAnomalyClick(anomaly);
+                                        }
+                                    }
+                                }
+                            }
+                        },
+                        plugins: {
+                            legend: {
+                                position: 'top',
+                            },
+                            tooltip: {
+                                mode: 'index',
+                                intersect: false,
+                                callbacks: {
+                                    label: function(context) {
+                                        if (context.dataset.label === 'Anomalies' && context.parsed.y !== null) {
+                                            return `⚠️ ANOMALY: ${context.parsed.y.toFixed(2)} m`;
+                                        }
+                                        if (context.parsed.y !== null) {
+                                            return `Level: ${context.parsed.y.toFixed(2)} m`;
+                                        }
+                                        return null;
+                                    },
+                                    afterLabel: function(context) {
+                                        if (context.dataset.label === 'Anomalies' && context.parsed.y !== null) {
+                                            return 'This reading is significantly different from the average and may indicate a problem.';
+                                        }
+                                        return null;
+                                    }
+                                }
+                            }
+                        },
+                        scales: {
+                            x: {
+                                type: 'time',
+                                time: {
+                                    unit: 'day',
+                                    displayFormats: {
+                                        day: 'MMM d'
+                                    }
+                                },
+                                title: {
+                                    display: true,
+                                    text: 'Date'
+                                }
+                            },
+                            y: {
+                                beginAtZero: false,
+                                title: {
+                                    display: true,
+                                    text: 'Level (m)'
+                                }
+                            }
+                        }
+                    }
+                };
+
+                // Create or update chart
+                if (chartRef.current) {
+                    if (chart) {
+                        chart.destroy();
+                    }
+
+                    const newChart = new Chart(chartRef.current, config);
+                    setChart(newChart);
+                }
+
+                // Cleanup on unmount
+                return () => {
+                    if (chart) {
+                        chart.destroy();
+                    }
+                };
+            }, [data, chart]);
+
+            if (!data || data.length === 0) {
+                return (
+                    <div style={{ padding: '20px', textAlign: 'center', backgroundColor: '#f9fafb', borderRadius: '8px' }}>
+                        No data available for chart
+                    </div>
+                );
+            }
+
+            return (
+                <div style={{ height: '300px', marginBottom: '30px' }}>
+                    <canvas ref={chartRef}></canvas>
+                </div>
+            );
+        }
+
+        // Protocol Configuration Modal Component
+        function ProtocolConfigModal({ isOpen, onClose, onSave, initialProtocol = {} }) {
+            const [protocolType, setProtocolType] = React.useState(initialProtocol.type || 'mqtt');
+            const [name, setName] = React.useState(initialProtocol.name || '');
+            const [host, setHost] = React.useState(initialProtocol.host || '');
+            const [port, setPort] = React.useState(initialProtocol.port || '');
+            const [path, setPath] = React.useState(initialProtocol.path || '');
+            const [username, setUsername] = React.useState(initialProtocol.username || '');
+            const [password, setPassword] = React.useState(initialProtocol.password || '');
+            const [topic, setTopic] = React.useState(initialProtocol.topic || '');
+            const [clientId, setClientId] = React.useState(initialProtocol.clientId || '');
+            const [apiKey, setApiKey] = React.useState(initialProtocol.apiKey || '');
+            const [tankId, setTankId] = React.useState(initialProtocol.tankId || '');
+            const [error, setError] = React.useState('');
+
+            if (!isOpen) return null;
+
+            const handleSubmit = (e) => {
+                e.preventDefault();
+
+                // Validate form
+                if (!name.trim()) {
+                    setError('Connection name is required');
+                    return;
+                }
+
+                if (!host.trim()) {
+                    setError('Host/URL is required');
+                    return;
+                }
+
+                // Create protocol object based on type
+                const protocol = {
+                    id: initialProtocol.id || `protocol-${Date.now()}`,
+                    type: protocolType,
+                    name,
+                    host,
+                    port,
+                    tankId,
+                    createdAt: initialProtocol.createdAt || new Date().toISOString(),
+                    updatedAt: new Date().toISOString()
+                };
+
+                // Add protocol-specific fields
+                switch (protocolType) {
+                    case 'mqtt':
+                        protocol.topic = topic;
+                        protocol.username = username;
+                        protocol.password = password;
+                        protocol.clientId = clientId;
+                        break;
+                    case 'rest':
+                        protocol.path = path;
+                        protocol.username = username;
+                        protocol.password = password;
+                        protocol.apiKey = apiKey;
+                        break;
+                    case 'graphql':
+                        protocol.path = path;
+                        protocol.username = username;
+                        protocol.password = password;
+                        protocol.apiKey = apiKey;
+                        break;
+                    case 'opcua':
+                        protocol.path = path;
+                        protocol.username = username;
+                        protocol.password = password;
+                        break;
+                    default:
+                        break;
+                }
+
+                // Save protocol
+                onSave(protocol);
+
+                // Close modal
+                onClose();
+            };
+
+            return (
+                <div style={{
+                    position: 'fixed',
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    bottom: 0,
+                    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    zIndex: 1000
+                }}>
+                    <div style={{
+                        backgroundColor: 'white',
+                        borderRadius: '8px',
+                        padding: '20px',
+                        width: '600px',
+                        maxWidth: '90%',
+                        maxHeight: '90vh',
+                        overflowY: 'auto',
+                        boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)'
+                    }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px' }}>
+                            <h2 style={{ margin: 0 }}>
+                                {initialProtocol.id ? 'Edit Connection' : 'Add New Connection'}
+                            </h2>
+                            <button
+                                onClick={onClose}
+                                style={{
+                                    background: 'none',
+                                    border: 'none',
+                                    fontSize: '20px',
+                                    cursor: 'pointer'
+                                }}
+                            >
+                                ×
+                            </button>
+                        </div>
+
+                        {error && (
+                            <div style={{
+                                padding: '10px',
+                                backgroundColor: '#fff5f5',
+                                color: '#e53e3e',
+                                borderRadius: '4px',
+                                marginBottom: '15px'
+                            }}>
+                                {error}
+                            </div>
+                        )}
+
+                        <form onSubmit={handleSubmit}>
+                            <div style={{ marginBottom: '15px' }}>
+                                <label style={{ display: 'block', marginBottom: '5px', fontWeight: '600' }}>
+                                    Protocol Type
+                                </label>
+                                <select
+                                    value={protocolType}
+                                    onChange={(e) => setProtocolType(e.target.value)}
+                                    style={{
+                                        width: '100%',
+                                        padding: '10px',
+                                        borderRadius: '6px',
+                                        border: '1px solid #ddd',
+                                        fontSize: '16px'
+                                    }}
+                                >
+                                    <option value="mqtt">MQTT</option>
+                                    <option value="rest">REST API</option>
+                                    <option value="graphql">GraphQL</option>
+                                    <option value="opcua">OPC UA</option>
+                                </select>
+                            </div>
+
+                            <div style={{ marginBottom: '15px' }}>
+                                <label style={{ display: 'block', marginBottom: '5px', fontWeight: '600' }}>
+                                    Connection Name
+                                </label>
+                                <input
+                                    type="text"
+                                    value={name}
+                                    onChange={(e) => setName(e.target.value)}
+                                    placeholder="Enter a name for this connection"
+                                    style={{
+                                        width: '100%',
+                                        padding: '10px',
+                                        borderRadius: '6px',
+                                        border: '1px solid #ddd',
+                                        fontSize: '16px'
+                                    }}
+                                    required
+                                />
+                            </div>
+
+                            <div style={{ marginBottom: '15px' }}>
+                                <label style={{ display: 'block', marginBottom: '5px', fontWeight: '600' }}>
+                                    Host/URL
+                                </label>
+                                <input
+                                    type="text"
+                                    value={host}
+                                    onChange={(e) => setHost(e.target.value)}
+                                    placeholder={
+                                        protocolType === 'mqtt' ? 'e.g., mqtt.example.com' :
+                                        protocolType === 'rest' ? 'e.g., https://api.example.com' :
+                                        protocolType === 'graphql' ? 'e.g., https://graphql.example.com' :
+                                        'e.g., opc.tcp://server.example.com'
+                                    }
+                                    style={{
+                                        width: '100%',
+                                        padding: '10px',
+                                        borderRadius: '6px',
+                                        border: '1px solid #ddd',
+                                        fontSize: '16px'
+                                    }}
+                                    required
+                                />
+                            </div>
+
+                            <div style={{ marginBottom: '15px' }}>
+                                <label style={{ display: 'block', marginBottom: '5px', fontWeight: '600' }}>
+                                    Port
+                                </label>
+                                <input
+                                    type="text"
+                                    value={port}
+                                    onChange={(e) => setPort(e.target.value)}
+                                    placeholder={
+                                        protocolType === 'mqtt' ? 'e.g., 1883 or 8883 for SSL' :
+                                        protocolType === 'rest' ? 'e.g., 443 (optional)' :
+                                        protocolType === 'graphql' ? 'e.g., 443 (optional)' :
+                                        'e.g., 4840'
+                                    }
+                                    style={{
+                                        width: '100%',
+                                        padding: '10px',
+                                        borderRadius: '6px',
+                                        border: '1px solid #ddd',
+                                        fontSize: '16px'
+                                    }}
+                                />
+                            </div>
+
+                            {/* Protocol-specific fields */}
+                            {(protocolType === 'rest' || protocolType === 'graphql' || protocolType === 'opcua') && (
+                                <div style={{ marginBottom: '15px' }}>
+                                    <label style={{ display: 'block', marginBottom: '5px', fontWeight: '600' }}>
+                                        {protocolType === 'opcua' ? 'Namespace' : 'Path/Endpoint'}
+                                    </label>
+                                    <input
+                                        type="text"
+                                        value={path}
+                                        onChange={(e) => setPath(e.target.value)}
+                                        placeholder={
+                                            protocolType === 'rest' ? 'e.g., /api/v1/data' :
+                                            protocolType === 'graphql' ? 'e.g., /graphql' :
+                                            'e.g., ns=1;s=Channel1.Device1'
+                                        }
+                                        style={{
+                                            width: '100%',
+                                            padding: '10px',
+                                            borderRadius: '6px',
+                                            border: '1px solid #ddd',
+                                            fontSize: '16px'
+                                        }}
+                                    />
+                                </div>
+                            )}
+
+                            {protocolType === 'mqtt' && (
+                                <div style={{ marginBottom: '15px' }}>
+                                    <label style={{ display: 'block', marginBottom: '5px', fontWeight: '600' }}>
+                                        Topic
+                                    </label>
+                                    <input
+                                        type="text"
+                                        value={topic}
+                                        onChange={(e) => setTopic(e.target.value)}
+                                        placeholder="e.g., sensors/tank/level"
+                                        style={{
+                                            width: '100%',
+                                            padding: '10px',
+                                            borderRadius: '6px',
+                                            border: '1px solid #ddd',
+                                            fontSize: '16px'
+                                        }}
+                                    />
+                                </div>
+                            )}
+
+                            {protocolType === 'mqtt' && (
+                                <div style={{ marginBottom: '15px' }}>
+                                    <label style={{ display: 'block', marginBottom: '5px', fontWeight: '600' }}>
+                                        Client ID
+                                    </label>
+                                    <input
+                                        type="text"
+                                        value={clientId}
+                                        onChange={(e) => setClientId(e.target.value)}
+                                        placeholder="e.g., tank-monitor-client"
+                                        style={{
+                                            width: '100%',
+                                            padding: '10px',
+                                            borderRadius: '6px',
+                                            border: '1px solid #ddd',
+                                            fontSize: '16px'
+                                        }}
+                                    />
+                                </div>
+                            )}
+
+                            {(protocolType === 'rest' || protocolType === 'graphql') && (
+                                <div style={{ marginBottom: '15px' }}>
+                                    <label style={{ display: 'block', marginBottom: '5px', fontWeight: '600' }}>
+                                        API Key (if required)
+                                    </label>
+                                    <input
+                                        type="text"
+                                        value={apiKey}
+                                        onChange={(e) => setApiKey(e.target.value)}
+                                        placeholder="Enter API key"
+                                        style={{
+                                            width: '100%',
+                                            padding: '10px',
+                                            borderRadius: '6px',
+                                            border: '1px solid #ddd',
+                                            fontSize: '16px'
+                                        }}
+                                    />
+                                </div>
+                            )}
+
+                            <div style={{ marginBottom: '15px' }}>
+                                <label style={{ display: 'block', marginBottom: '5px', fontWeight: '600' }}>
+                                    Username (if required)
+                                </label>
+                                <input
+                                    type="text"
+                                    value={username}
+                                    onChange={(e) => setUsername(e.target.value)}
+                                    placeholder="Enter username"
+                                    style={{
+                                        width: '100%',
+                                        padding: '10px',
+                                        borderRadius: '6px',
+                                        border: '1px solid #ddd',
+                                        fontSize: '16px'
+                                    }}
+                                />
+                            </div>
+
+                            <div style={{ marginBottom: '15px' }}>
+                                <label style={{ display: 'block', marginBottom: '5px', fontWeight: '600' }}>
+                                    Password (if required)
+                                </label>
+                                <input
+                                    type="password"
+                                    value={password}
+                                    onChange={(e) => setPassword(e.target.value)}
+                                    placeholder="Enter password"
+                                    style={{
+                                        width: '100%',
+                                        padding: '10px',
+                                        borderRadius: '6px',
+                                        border: '1px solid #ddd',
+                                        fontSize: '16px'
+                                    }}
+                                />
+                            </div>
+
+                            <div style={{ marginBottom: '15px' }}>
+                                <label style={{ display: 'block', marginBottom: '5px', fontWeight: '600' }}>
+                                    Associated Tank
+                                </label>
+                                <input
+                                    type="text"
+                                    value={tankId}
+                                    onChange={(e) => setTankId(e.target.value)}
+                                    placeholder="Enter tank ID (e.g., tank1)"
+                                    style={{
+                                        width: '100%',
+                                        padding: '10px',
+                                        borderRadius: '6px',
+                                        border: '1px solid #ddd',
+                                        fontSize: '16px'
+                                    }}
+                                />
+                            </div>
+
+                            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px', marginTop: '20px' }}>
+                                <button
+                                    type="button"
+                                    onClick={onClose}
+                                    style={{
+                                        padding: '10px 15px',
+                                        backgroundColor: '#718096',
+                                        color: 'white',
+                                        border: 'none',
+                                        borderRadius: '4px',
+                                        cursor: 'pointer'
+                                    }}
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    type="submit"
+                                    style={{
+                                        padding: '10px 15px',
+                                        backgroundColor: '#4361ee',
+                                        color: 'white',
+                                        border: 'none',
+                                        borderRadius: '4px',
+                                        cursor: 'pointer'
+                                    }}
+                                >
+                                    Save Connection
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            );
+        }
+
+        // Anomaly Report Modal Component
+        function AnomalyReportModal({ isOpen, onClose, anomaly, onReport, onMarkFalsePositive }) {
+            if (!isOpen) return null;
+
+            return (
+                <div style={{
+                    position: 'fixed',
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    bottom: 0,
+                    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    zIndex: 1000
+                }}>
+                    <div style={{
+                        backgroundColor: 'white',
+                        borderRadius: '8px',
+                        padding: '20px',
+                        width: '500px',
+                        maxWidth: '90%',
+                        boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)'
+                    }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px' }}>
+                            <h2 style={{ margin: 0 }}>Anomaly Detected</h2>
+                            <button
+                                onClick={onClose}
+                                style={{
+                                    background: 'none',
+                                    border: 'none',
+                                    fontSize: '20px',
+                                    cursor: 'pointer'
+                                }}
+                            >
+                                ×
+                            </button>
+                        </div>
+
+                        <div style={{ marginBottom: '20px' }}>
+                            <p><strong>Date:</strong> {new Date(anomaly.timestamp).toLocaleString()}</p>
+                            <p><strong>Tank Level:</strong> {anomaly.level.toFixed(2)} m</p>
+                            <p><strong>Status:</strong> <span style={{ color: '#e53e3e' }}>Anomaly Detected</span></p>
+                            <p>This reading is significantly different from the average and may indicate a problem with the tank or sensor.</p>
+                        </div>
+
+                        <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                            <button
+                                onClick={() => onMarkFalsePositive(anomaly)}
+                                style={{
+                                    padding: '10px 15px',
+                                    backgroundColor: '#718096',
+                                    color: 'white',
+                                    border: 'none',
+                                    borderRadius: '4px',
+                                    cursor: 'pointer'
+                                }}
+                            >
+                                Mark as False Positive
+                            </button>
+                            <button
+                                onClick={() => onReport(anomaly)}
+                                style={{
+                                    padding: '10px 15px',
+                                    backgroundColor: '#e53e3e',
+                                    color: 'white',
+                                    border: 'none',
+                                    borderRadius: '4px',
+                                    cursor: 'pointer'
+                                }}
+                            >
+                                Report Issue
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            );
+        }
+
+        // Protocol List Component
+        function ProtocolList({ protocols, onEdit, onDelete, onTest }) {
+            return (
+                <div>
+                    {protocols.length === 0 ? (
+                        <div style={{
+                            padding: '20px',
+                            textAlign: 'center',
+                            backgroundColor: '#f9fafb',
+                            borderRadius: '8px',
+                            marginBottom: '20px'
+                        }}>
+                            No connections configured. Click "Add Connection" to create one.
+                        </div>
+                    ) : (
+                        <div>
+                            {protocols.map(protocol => (
+                                <div
+                                    key={protocol.id}
+                                    style={{
+                                        border: '1px solid #e2e8f0',
+                                        borderRadius: '8px',
+                                        padding: '15px',
+                                        marginBottom: '15px',
+                                        backgroundColor: 'white'
+                                    }}
+                                >
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                        <div>
+                                            <h3 style={{ margin: '0 0 5px 0', fontSize: '18px' }}>{protocol.name}</h3>
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                                <span style={{
+                                                    backgroundColor:
+                                                        protocol.type === 'mqtt' ? '#ebf8ff' :
+                                                        protocol.type === 'rest' ? '#e6fffa' :
+                                                        protocol.type === 'graphql' ? '#faf5ff' :
+                                                        '#fff5f5',
+                                                    color:
+                                                        protocol.type === 'mqtt' ? '#3182ce' :
+                                                        protocol.type === 'rest' ? '#319795' :
+                                                        protocol.type === 'graphql' ? '#805ad5' :
+                                                        '#e53e3e',
+                                                    padding: '3px 8px',
+                                                    borderRadius: '4px',
+                                                    fontSize: '14px',
+                                                    fontWeight: '500'
+                                                }}>
+                                                    {protocol.type.toUpperCase()}
+                                                </span>
+                                                <span style={{ color: '#718096', fontSize: '14px' }}>
+                                                    {protocol.host}{protocol.port ? `:${protocol.port}` : ''}
+                                                </span>
+                                                {protocol.tankId && (
+                                                    <span style={{
+                                                        backgroundColor: '#f0fff4',
+                                                        color: '#38a169',
+                                                        padding: '3px 8px',
+                                                        borderRadius: '4px',
+                                                        fontSize: '14px'
+                                                    }}>
+                                                        Tank: {protocol.tankId}
+                                                    </span>
+                                                )}
+                                            </div>
+                                        </div>
+                                        <div style={{ display: 'flex', gap: '10px' }}>
+                                            <button
+                                                onClick={() => onTest(protocol)}
+                                                style={{
+                                                    padding: '6px 12px',
+                                                    backgroundColor: '#4361ee',
+                                                    color: 'white',
+                                                    border: 'none',
+                                                    borderRadius: '4px',
+                                                    cursor: 'pointer',
+                                                    fontSize: '14px'
+                                                }}
+                                            >
+                                                Test
+                                            </button>
+                                            <button
+                                                onClick={() => onEdit(protocol)}
+                                                style={{
+                                                    padding: '6px 12px',
+                                                    backgroundColor: '#718096',
+                                                    color: 'white',
+                                                    border: 'none',
+                                                    borderRadius: '4px',
+                                                    cursor: 'pointer',
+                                                    fontSize: '14px'
+                                                }}
+                                            >
+                                                Edit
+                                            </button>
+                                            <button
+                                                onClick={() => onDelete(protocol.id)}
+                                                style={{
+                                                    padding: '6px 12px',
+                                                    backgroundColor: '#e53e3e',
+                                                    color: 'white',
+                                                    border: 'none',
+                                                    borderRadius: '4px',
+                                                    cursor: 'pointer',
+                                                    fontSize: '14px'
+                                                }}
+                                            >
+                                                Delete
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                    <div style={{ marginTop: '10px', fontSize: '14px', color: '#718096' }}>
+                                        {protocol.type === 'mqtt' && protocol.topic && (
+                                            <div>Topic: {protocol.topic}</div>
+                                        )}
+                                        {(protocol.type === 'rest' || protocol.type === 'graphql' || protocol.type === 'opcua') && protocol.path && (
+                                            <div>{protocol.type === 'opcua' ? 'Namespace' : 'Path'}: {protocol.path}</div>
+                                        )}
+                                        <div>Created: {new Date(protocol.createdAt).toLocaleString()}</div>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    )}
+                </div>
+            );
+        }
+
+        // Tank Selector Component
+        function TankSelector({ tanks, selectedTank, onSelectTank }) {
+            return (
+                <div style={{ marginBottom: '20px' }}>
+                    <label htmlFor="tank-selector" style={{ display: 'block', marginBottom: '8px', fontWeight: '600' }}>
+                        Select Tank:
+                    </label>
+                    <select
+                        id="tank-selector"
+                        value={selectedTank}
+                        onChange={(e) => onSelectTank(e.target.value)}
+                        style={{
+                            width: '100%',
+                            padding: '10px',
+                            borderRadius: '6px',
+                            border: '1px solid #ddd',
+                            fontSize: '16px'
+                        }}
+                    >
+                        {tanks.map(tank => (
+                            <option key={tank.id} value={tank.id}>
+                                {tank.name}
+                            </option>
+                        ))}
+                    </select>
+                </div>
+            );
+        }
+
+        // Protocol Management Page Component
+        function ProtocolManagementPage({ onBack, protocols, onSaveProtocol, onDeleteProtocol, onTestProtocol }) {
+            const [isModalOpen, setIsModalOpen] = React.useState(false);
+            const [selectedProtocol, setSelectedProtocol] = React.useState(null);
+            const [testResult, setTestResult] = React.useState(null);
+
+            const handleAddProtocol = () => {
+                setSelectedProtocol(null);
+                setIsModalOpen(true);
+            };
+
+            const handleEditProtocol = (protocol) => {
+                setSelectedProtocol(protocol);
+                setIsModalOpen(true);
+            };
+
+            const handleSaveProtocol = (protocol) => {
+                onSaveProtocol(protocol);
+                setIsModalOpen(false);
+                setSelectedProtocol(null);
+            };
+
+            const handleTestProtocol = async (protocol) => {
+                setTestResult({
+                    status: 'testing',
+                    protocol: protocol
+                });
+
+                try {
+                    // In a real app, you would actually test the connection
+                    // For now, we'll simulate a test with a timeout
+                    await new Promise(resolve => setTimeout(resolve, 1500));
+
+                    // Simulate success for MQTT and REST, failure for others
+                    const success = ['mqtt', 'rest'].includes(protocol.type);
+
+                    setTestResult({
+                        status: success ? 'success' : 'error',
+                        protocol: protocol,
+                        message: success
+                            ? `Successfully connected to ${protocol.host}`
+                            : `Failed to connect to ${protocol.host}: Connection refused`
+                    });
+
+                    // Clear test result after 5 seconds
+                    setTimeout(() => {
+                        setTestResult(null);
+                    }, 5000);
+
+                    // Call the parent handler
+                    onTestProtocol(protocol);
+                } catch (error) {
+                    setTestResult({
+                        status: 'error',
+                        protocol: protocol,
+                        message: `Error: ${error.message}`
+                    });
+
+                    // Clear test result after 5 seconds
+                    setTimeout(() => {
+                        setTestResult(null);
+                    }, 5000);
+                }
+            };
+
+            return (
+                <div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                            <button
+                                onClick={onBack}
+                                style={{
+                                    background: 'none',
+                                    border: 'none',
+                                    fontSize: '24px',
+                                    cursor: 'pointer',
+                                    color: '#4361ee'
+                                }}
+                            >
+                                ←
+                            </button>
+                            <h2 style={{ margin: 0 }}>Protocol Management</h2>
+                        </div>
+                        <button
+                            onClick={handleAddProtocol}
+                            style={{
+                                padding: '10px 15px',
+                                backgroundColor: '#4361ee',
+                                color: 'white',
+                                border: 'none',
+                                borderRadius: '4px',
+                                cursor: 'pointer',
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '5px'
+                            }}
+                        >
+                            <span style={{ fontSize: '18px' }}>+</span> Add Connection
+                        </button>
+                    </div>
+
+                    <div style={{ marginBottom: '20px' }}>
+                        <p>
+                            Configure connections to external data sources using various protocols.
+                            These connections will be used to fetch tank level data from external systems.
+                        </p>
+                    </div>
+
+                    {/* Test Result */}
+                    {testResult && (
+                        <div style={{
+                            padding: '15px',
+                            backgroundColor: testResult.status === 'success' ? '#f0fff4' :
+                                            testResult.status === 'testing' ? '#ebf8ff' : '#fff5f5',
+                            borderRadius: '8px',
+                            marginBottom: '20px',
+                            borderLeft: `4px solid ${
+                                testResult.status === 'success' ? '#38a169' :
+                                testResult.status === 'testing' ? '#3182ce' : '#e53e3e'
+                            }`
+                        }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                {testResult.status === 'testing' ? (
+                                    <div className="spinner" style={{
+                                        width: '20px',
+                                        height: '20px',
+                                        borderLeftColor: '#3182ce'
+                                    }}></div>
+                                ) : (
+                                    <span style={{
+                                        fontSize: '20px',
+                                        color: testResult.status === 'success' ? '#38a169' : '#e53e3e'
+                                    }}>
+                                        {testResult.status === 'success' ? '✓' : '✗'}
+                                    </span>
+                                )}
+                                <div>
+                                    <div style={{ fontWeight: '600' }}>
+                                        {testResult.status === 'testing'
+                                            ? `Testing connection to ${testResult.protocol.name}...`
+                                            : testResult.status === 'success'
+                                                ? `Connection successful: ${testResult.protocol.name}`
+                                                : `Connection failed: ${testResult.protocol.name}`
+                                        }
+                                    </div>
+                                    {testResult.message && (
+                                        <div style={{ fontSize: '14px', marginTop: '5px' }}>
+                                            {testResult.message}
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Protocol List */}
+                    <ProtocolList
+                        protocols={protocols}
+                        onEdit={handleEditProtocol}
+                        onDelete={onDeleteProtocol}
+                        onTest={handleTestProtocol}
+                    />
+
+                    {/* Protocol Configuration Modal */}
+                    <ProtocolConfigModal
+                        isOpen={isModalOpen}
+                        onClose={() => setIsModalOpen(false)}
+                        onSave={handleSaveProtocol}
+                        initialProtocol={selectedProtocol}
+                    />
+                </div>
+            );
+        }
+
+        // Login Form Component
+        function LoginForm() {
+            const [username, setUsername] = React.useState('');
+            const [password, setPassword] = React.useState('');
+            const [error, setError] = React.useState('');
+            const [success, setSuccess] = React.useState('');
+            const [isLoggedIn, setIsLoggedIn] = React.useState(false);
+            const [user, setUser] = React.useState(null);
+            const [loading, setLoading] = React.useState(false);
+            const [stats, setStats] = React.useState(null);
+            const [tankLevels, setTankLevels] = React.useState([]);
+            const [historicalData, setHistoricalData] = React.useState([]);
+            const [tanks, setTanks] = React.useState([
+                { id: 'tank1', name: 'Tank 1 - Main Storage' },
+                { id: 'tank2', name: 'Tank 2 - Secondary Storage' },
+                { id: 'tank3', name: 'Tank 3 - Reserve' }
+            ]);
+            const [selectedTank, setSelectedTank] = React.useState('tank1');
+            const [anomalies, setAnomalies] = React.useState([]);
+            const [selectedAnomaly, setSelectedAnomaly] = React.useState(null);
+            const [isAnomalyModalOpen, setIsAnomalyModalOpen] = React.useState(false);
+            const [falsePositives, setFalsePositives] = React.useState([]);
+            const [reportedAnomalies, setReportedAnomalies] = React.useState([]);
+            const [protocols, setProtocols] = React.useState([
+                {
+                    id: 'protocol-1',
+                    type: 'mqtt',
+                    name: 'Main MQTT Connection',
+                    host: 'mqtt.example.com',
+                    port: '1883',
+                    topic: 'sensors/tank/level',
+                    clientId: 'tank-monitor-client',
+                    username: 'mqttuser',
+                    password: 'password123',
+                    tankId: 'tank1',
+                    createdAt: '2023-01-15T12:00:00Z',
+                    updatedAt: '2023-01-15T12:00:00Z'
+                },
+                {
+                    id: 'protocol-2',
+                    type: 'rest',
+                    name: 'Backup REST API',
+                    host: 'https://api.example.com',
+                    path: '/api/v1/tank-data',
+                    apiKey: 'api-key-123456',
+                    tankId: 'tank2',
+                    createdAt: '2023-02-20T14:30:00Z',
+                    updatedAt: '2023-02-20T14:30:00Z'
+                }
+            ]);
+            const [currentPage, setCurrentPage] = React.useState('dashboard'); // 'dashboard' or 'protocols'
+
+            // Check if user is already logged in
+            React.useEffect(() => {
+                const token = localStorage.getItem('token');
+                const storedUser = localStorage.getItem('user');
+
+                if (token && storedUser) {
+                    try {
+                        const parsedUser = JSON.parse(storedUser);
+                        if (parsedUser && parsedUser.username) {
+                            setIsLoggedIn(true);
+                            setUser(parsedUser);
+                            fetchData(token);
+                        }
+                    } catch (error) {
+                        console.error('Error parsing stored user:', error);
+                        localStorage.removeItem('user');
+                        localStorage.removeItem('token');
+                    }
+                }
+            }, []);
+
+            const handleLogin = async (e) => {
+                e.preventDefault();
+                setLoading(true);
+                setError('');
+                setSuccess('');
+
+                try {
+                    const response = await fetch('http://localhost:8000/api/auth/login', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ username, password })
+                    });
+
+                    const data = await response.json();
+
+                    if (!response.ok) {
+                        throw new Error(data.detail || 'Login failed');
+                    }
+
+                    // Store authentication data
+                    localStorage.setItem('token', data.access_token);
+                    localStorage.setItem('user', JSON.stringify(data.user));
+
+                    setSuccess('Login successful!');
+                    setIsLoggedIn(true);
+                    setUser(data.user);
+                    fetchData(data.access_token);
+                } catch (error) {
+                    console.error('Login error:', error);
+                    setError('Login failed. Please check your credentials.');
+                } finally {
+                    setLoading(false);
+                }
+            };
+
+            const handleLogout = () => {
+                localStorage.removeItem('token');
+                localStorage.removeItem('user');
+                setIsLoggedIn(false);
+                setUser(null);
+                setStats(null);
+                setTankLevels([]);
+                setHistoricalData([]);
+            };
+
+            const fetchData = async (token, tankId = selectedTank) => {
+                try {
+                    setLoading(true);
+
+                    const headers = { Authorization: `Bearer ${token}` };
+
+                    // Fetch tank levels
+                    const levelsResponse = await fetch(
+                        `http://localhost:8000/api/tank-levels?days=30&tank_id=${tankId}`,
+                        { headers }
+                    );
+
+                    if (!levelsResponse.ok) {
+                        throw new Error('Failed to fetch tank levels');
+                    }
+
+                    const levelsData = await levelsResponse.json();
+
+                    // Add tank_id to each data point
+                    const dataWithTankId = levelsData.map(item => ({
+                        ...item,
+                        tank_id: tankId
+                    }));
+
+                    // Store all data for the chart
+                    setHistoricalData(dataWithTankId);
+
+                    // Detect anomalies
+                    detectAnomalies(dataWithTankId);
+
+                    // Sort by timestamp (newest first) for the table
+                    const sortedData = [...dataWithTankId].sort((a, b) =>
+                        new Date(b.timestamp) - new Date(a.timestamp)
+                    );
+                    setTankLevels(sortedData.slice(0, 5)); // Show only the 5 most recent readings
+
+                    // Fetch stats
+                    const statsResponse = await fetch(
+                        `http://localhost:8000/api/stats?days=30&tank_id=${tankId}`,
+                        { headers }
+                    );
+
+                    if (!statsResponse.ok) {
+                        throw new Error('Failed to fetch stats');
+                    }
+
+                    const statsData = await statsResponse.json();
+                    setStats(statsData);
+
+                    setError('');
+                } catch (err) {
+                    console.error('Error fetching data:', err);
+                    setError('Error fetching data. Please try again.');
+                } finally {
+                    setLoading(false);
+                }
+            };
+
+            // Handle tank selection change
+            const handleTankChange = (tankId) => {
+                setSelectedTank(tankId);
+                const token = localStorage.getItem('token');
+                if (token) {
+                    fetchData(token, tankId);
+                }
+            };
+
+            // Detect anomalies in the data
+            const detectAnomalies = (data) => {
+                if (!data || data.length < 3) return [];
+
+                // Calculate mean and standard deviation
+                const levels = data.map(item => item.level);
+                const mean = levels.reduce((sum, val) => sum + val, 0) / levels.length;
+                const variance = levels.reduce((sum, val) => sum + Math.pow(val - mean, 2), 0) / levels.length;
+                const stdDev = Math.sqrt(variance);
+
+                // Mark points as anomalies if they are more than 2 standard deviations from the mean
+                const threshold = 2 * stdDev;
+
+                // Filter out anomalies that have been marked as false positives
+                const anomalyData = data
+                    .filter(item => Math.abs(item.level - mean) > threshold)
+                    .filter(item => !falsePositives.some(fp =>
+                        fp.timestamp === item.timestamp && fp.tank_id === item.tank_id
+                    ));
+
+                setAnomalies(anomalyData);
+                return anomalyData;
+            };
+
+            // Handle opening the anomaly modal
+            const handleAnomalyClick = (anomaly) => {
+                setSelectedAnomaly(anomaly);
+                setIsAnomalyModalOpen(true);
+            };
+
+            // Handle closing the anomaly modal
+            const handleCloseAnomalyModal = () => {
+                setIsAnomalyModalOpen(false);
+                setSelectedAnomaly(null);
+            };
+
+            // Handle reporting an anomaly
+            const handleReportAnomaly = (anomaly) => {
+                // In a real app, you would send this to your backend
+                console.log('Reporting anomaly:', anomaly);
+
+                // Add to reported anomalies
+                setReportedAnomalies([...reportedAnomalies, anomaly]);
+
+                // Show success message
+                setSuccess(`Anomaly reported successfully. Maintenance team has been notified.`);
+
+                // Close the modal
+                handleCloseAnomalyModal();
+
+                // In a real app, you would refresh the data after reporting
+                setTimeout(() => {
+                    setSuccess('');
+                }, 5000);
+            };
+
+            // Handle marking an anomaly as a false positive
+            const handleMarkFalsePositive = (anomaly) => {
+                // In a real app, you would send this to your backend
+                console.log('Marking as false positive:', anomaly);
+
+                // Add to false positives
+                setFalsePositives([...falsePositives, anomaly]);
+
+                // Show success message
+                setSuccess(`Anomaly marked as false positive. It will be ignored in future detections.`);
+
+                // Close the modal
+                handleCloseAnomalyModal();
+
+                // Refresh anomalies list
+                detectAnomalies(historicalData);
+
+                // In a real app, you would refresh the data after marking
+                setTimeout(() => {
+                    setSuccess('');
+                }, 5000);
+            };
+
+            // Protocol management handlers
+            const handleSaveProtocol = (protocol) => {
+                // Check if protocol already exists (for editing)
+                const existingIndex = protocols.findIndex(p => p.id === protocol.id);
+
+                if (existingIndex >= 0) {
+                    // Update existing protocol
+                    const updatedProtocols = [...protocols];
+                    updatedProtocols[existingIndex] = protocol;
+                    setProtocols(updatedProtocols);
+                    setSuccess(`Protocol "${protocol.name}" updated successfully.`);
+                } else {
+                    // Add new protocol
+                    setProtocols([...protocols, protocol]);
+                    setSuccess(`Protocol "${protocol.name}" added successfully.`);
+                }
+
+                // Clear success message after 5 seconds
+                setTimeout(() => {
+                    setSuccess('');
+                }, 5000);
+            };
+
+            const handleDeleteProtocol = (protocolId) => {
+                // Find protocol to delete
+                const protocolToDelete = protocols.find(p => p.id === protocolId);
+
+                if (!protocolToDelete) {
+                    setError('Protocol not found.');
+                    return;
+                }
+
+                // Remove protocol
+                setProtocols(protocols.filter(p => p.id !== protocolId));
+                setSuccess(`Protocol "${protocolToDelete.name}" deleted successfully.`);
+
+                // Clear success message after 5 seconds
+                setTimeout(() => {
+                    setSuccess('');
+                }, 5000);
+            };
+
+            const handleTestProtocol = (protocol) => {
+                // In a real app, you would actually test the connection
+                console.log('Testing protocol:', protocol);
+            };
+
+            // Navigation handlers
+            const handleNavigateToProtocols = () => {
+                setCurrentPage('protocols');
+            };
+
+            const handleNavigateToDashboard = () => {
+                setCurrentPage('dashboard');
+            };
+
+            // If not logged in, show login form
+            if (!isLoggedIn) {
+                return (
+                    <div className="login-container">
+                        <div className="logo" style={{ textAlign: 'center', marginBottom: '20px' }}>
+                            Tank Monitor
+                        </div>
+                        <h1 className="login-title">Welcome Back</h1>
+                        <p className="login-subtitle">Please sign in to access your dashboard</p>
+
+                        {error && <div className="error">{error}</div>}
+                        {success && <div className="success">{success}</div>}
+
+                        <form onSubmit={handleLogin}>
+                            <div className="form-group">
+                                <label htmlFor="username">Username</label>
+                                <input
+                                    type="text"
+                                    id="username"
+                                    value={username}
+                                    onChange={(e) => setUsername(e.target.value)}
+                                    placeholder="Enter your username"
+                                    required
+                                />
+                            </div>
+                            <div className="form-group">
+                                <label htmlFor="password">Password</label>
+                                <input
+                                    type="password"
+                                    id="password"
+                                    value={password}
+                                    onChange={(e) => setPassword(e.target.value)}
+                                    placeholder="Enter your password"
+                                    required
+                                />
+                            </div>
+                            <button
+                                type="submit"
+                                className="button"
+                                style={{ width: '100%' }}
+                                disabled={loading}
+                            >
+                                {loading ? (
+                                    <>
+                                        <span className="spinner" style={{
+                                            width: '20px',
+                                            height: '20px',
+                                            display: 'inline-block',
+                                            verticalAlign: 'middle',
+                                            marginRight: '10px'
+                                        }}></span>
+                                        Logging in...
+                                    </>
+                                ) : 'Sign In'}
+                            </button>
+                        </form>
+
+                        <div className="login-footer">
+                            <p>Default admin credentials:</p>
+                            <p><strong>Username:</strong> admin <strong>Password:</strong> admin123</p>
+                        </div>
+                    </div>
+                );
+            }
+
+            // If logged in, show dashboard or protocol management page
+            if (currentPage === 'protocols') {
+                return (
+                    <div>
+                        <div className="header">
+                            <div className="logo">Tank Monitor</div>
+                            <div className="header-actions">
+                                <div className="user-info">
+                                    <div className="user-avatar">
+                                        {user.username.charAt(0).toUpperCase()}
+                                    </div>
+                                    <span>{user.username}</span>
+                                </div>
+                                <button
+                                    onClick={handleLogout}
+                                    className="button"
+                                    style={{ backgroundColor: '#e53e3e', margin: 0 }}
+                                >
+                                    Logout
+                                </button>
+                            </div>
+                        </div>
+
+                        {error && <div className="error">{error}</div>}
+                        {success && <div className="success">{success}</div>}
+
+                        <ProtocolManagementPage
+                            onBack={handleNavigateToDashboard}
+                            protocols={protocols}
+                            onSaveProtocol={handleSaveProtocol}
+                            onDeleteProtocol={handleDeleteProtocol}
+                            onTestProtocol={handleTestProtocol}
+                        />
+                    </div>
+                );
+            }
+
+            // If logged in, show dashboard
+            return (
+                <div>
+                    <div className="header">
+                        <div className="logo">Tank Monitor</div>
+                        <div className="header-actions">
+                            <button
+                                onClick={handleNavigateToProtocols}
+                                className="button"
+                                style={{
+                                    backgroundColor: '#4361ee',
+                                    margin: '0 10px 0 0',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '5px'
+                                }}
+                            >
+                                <span style={{ fontSize: '14px' }}>⚙️</span> Manage Connections
+                            </button>
+                            <div className="user-info">
+                                <div className="user-avatar">
+                                    {user.username.charAt(0).toUpperCase()}
+                                </div>
+                                <span>{user.username}</span>
+                            </div>
+                            <button
+                                onClick={handleLogout}
+                                className="button"
+                                style={{ backgroundColor: '#e53e3e', margin: 0 }}
+                            >
+                                Logout
+                            </button>
+                        </div>
+                    </div>
+
+                    {error && <div className="error">{error}</div>}
+
+                    {loading ? (
+                        <div className="loading">
+                            <div className="spinner"></div>
+                            <p>Loading dashboard data...</p>
+                        </div>
+                    ) : (
+                        <div className="dashboard">
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+                                <h2>Tank Monitoring Dashboard</h2>
+                                <div style={{ width: '300px' }}>
+                                    <TankSelector
+                                        tanks={tanks}
+                                        selectedTank={selectedTank}
+                                        onSelectTank={handleTankChange}
+                                    />
+                                </div>
+                            </div>
+
+                            {stats && (
+                                <div className="stats-grid">
+                                    <div className="card">
+                                        <h3 className="card-title">Current Level</h3>
+                                        <div className="stat">{stats.current_level?.toFixed(2)} m</div>
+                                        <div className="stat-label">
+                                            Updated: {new Date(stats.last_updated).toLocaleString()}
+                                        </div>
+                                    </div>
+                                    <div className="card">
+                                        <h3 className="card-title">Min Level</h3>
+                                        <div className="stat">{stats.min_level?.toFixed(2)} m</div>
+                                        <div className="stat-label">
+                                            Last {stats.count} readings
+                                        </div>
+                                    </div>
+                                    <div className="card">
+                                        <h3 className="card-title">Max Level</h3>
+                                        <div className="stat">{stats.max_level?.toFixed(2)} m</div>
+                                        <div className="stat-label">
+                                            Last {stats.count} readings
+                                        </div>
+                                    </div>
+                                    <div className="card">
+                                        <h3 className="card-title">Average Level</h3>
+                                        <div className="stat">{stats.avg_level?.toFixed(2)} m</div>
+                                        <div className="stat-label">
+                                            Std Dev: {stats.std_dev?.toFixed(2)}
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* Anomaly Summary */}
+                            {anomalies.length > 0 && (
+                                <div style={{
+                                    marginTop: '20px',
+                                    padding: '15px',
+                                    backgroundColor: '#fff5f5',
+                                    borderRadius: '8px',
+                                    borderLeft: '4px solid #e53e3e'
+                                }}>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                        <h3 style={{ margin: '0', color: '#e53e3e' }}>
+                                            ⚠️ Anomalies Detected ({anomalies.length})
+                                        </h3>
+                                        <button
+                                            onClick={() => handleAnomalyClick(anomalies[0])}
+                                            className="button"
+                                            style={{
+                                                margin: 0,
+                                                backgroundColor: '#e53e3e',
+                                                padding: '8px 12px',
+                                                fontSize: '14px'
+                                            }}
+                                        >
+                                            View Details
+                                        </button>
+                                    </div>
+                                    <p style={{ marginTop: '10px', marginBottom: '0' }}>
+                                        {anomalies.length} unusual readings detected in the selected tank.
+                                        These readings are significantly different from the average and may indicate a problem.
+                                    </p>
+                                </div>
+                            )}
+
+                            <div style={{ marginTop: '30px', marginBottom: '30px' }}>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px' }}>
+                                    <h2 style={{ margin: 0 }}>Tank Level History</h2>
+                                    <button
+                                        onClick={() => fetchData(localStorage.getItem('token'))}
+                                        className="button"
+                                        disabled={loading}
+                                        style={{ margin: 0 }}
+                                    >
+                                        {loading ? (
+                                            <>
+                                                <span className="spinner" style={{
+                                                    width: '16px',
+                                                    height: '16px',
+                                                    display: 'inline-block',
+                                                    verticalAlign: 'middle',
+                                                    marginRight: '8px'
+                                                }}></span>
+                                                Refreshing...
+                                            </>
+                                        ) : 'Refresh Data'}
+                                    </button>
+                                </div>
+
+                                {/* Tank Level Chart */}
+                                <TankLevelChart
+                                    data={historicalData}
+                                    onAnomalyClick={handleAnomalyClick}
+                                />
+
+                                {/* Instructions for anomalies */}
+                                <div style={{ marginTop: '10px', fontSize: '14px', color: '#718096' }}>
+                                    <p>
+                                        <strong>Note:</strong> Anomalies are marked with red triangles (▲) on the chart.
+                                        Click on an anomaly point to view details and report issues.
+                                    </p>
+                                </div>
+                            </div>
+
+                            {/* Anomaly Report Modal */}
+                            {selectedAnomaly && (
+                                <AnomalyReportModal
+                                    isOpen={isAnomalyModalOpen}
+                                    onClose={handleCloseAnomalyModal}
+                                    anomaly={selectedAnomaly}
+                                    onReport={handleReportAnomaly}
+                                    onMarkFalsePositive={handleMarkFalsePositive}
+                                />
+                            )}
+
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+                                <h2 style={{ margin: 0 }}>Recent Tank Readings</h2>
+                            </div>
+
+                            {tankLevels.length > 0 ? (
+                                <table>
+                                    <thead>
+                                        <tr>
+                                            <th>Date</th>
+                                            <th>Time</th>
+                                            <th>Level (m)</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {tankLevels.map((reading, index) => (
+                                            <tr key={index}>
+                                                <td>
+                                                    {new Date(reading.timestamp).toLocaleDateString()}
+                                                </td>
+                                                <td>
+                                                    {new Date(reading.timestamp).toLocaleTimeString()}
+                                                </td>
+                                                <td>
+                                                    {reading.level.toFixed(2)}
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            ) : (
+                                <div style={{ padding: '20px', textAlign: 'center', backgroundColor: '#f9fafb', borderRadius: '8px' }}>
+                                    No tank readings available
+                                </div>
+                            )}
+                        </div>
+                    )}
+                </div>
+            );
+        }
+
+        // Render the LoginForm component to the DOM
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<LoginForm />);
+    </script>
+</body>
+</html>
