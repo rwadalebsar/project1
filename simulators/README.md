@@ -17,6 +17,44 @@ Simulators for direct data ingestion via GraphQL, OPC UA, or Modbus have not bee
   ```bash
   pip install paho-mqtt
   ```
+
+---
+#### Setting up a Local MQTT Broker (for MQTT Simulator)
+For testing the MQTT simulator, you'll need an MQTT broker. If you don't have one, you can install Mosquitto, a popular open-source broker:
+
+**On macOS (using Homebrew):**
+```bash
+brew install mosquitto
+# To start Mosquitto (usually starts automatically after install or on reboot):
+brew services start mosquitto
+# To run it in the foreground for testing (optional):
+# /usr/local/opt/mosquitto/sbin/mosquitto -c /usr/local/etc/mosquitto/mosquitto.conf
+```
+
+**On Linux (Debian/Ubuntu):**
+```bash
+sudo apt update
+sudo apt install mosquitto mosquitto-clients
+# Mosquitto usually starts automatically. To check status:
+# sudo systemctl status mosquitto
+```
+
+**On Linux (Fedora):**
+```bash
+sudo dnf install mosquitto
+# Mosquitto usually starts automatically. To check status:
+# sudo systemctl status mosquitto
+```
+
+**On Windows:**
+- Download the installer from the [Mosquitto Downloads page](https://mosquitto.org/download/).
+- Run the installer and follow the prompts.
+- After installation, Mosquitto might run as a service automatically, or you might need to start it from the Start Menu or command line. Refer to the Mosquitto documentation for specifics.
+
+**Basic Mosquitto Configuration:**
+Mosquitto typically works out-of-the-box for local, unauthenticated connections on port 1883. For more advanced configurations (like adding users/passwords or TLS), refer to the official [Mosquitto documentation](https://mosquitto.org/documentation/).
+
+---
 - Ensure the main backend application is running.
 - For the MQTT simulator, ensure an MQTT broker is running and accessible, and that the backend is configured to connect to it and subscribe to the relevant topics.
 - For the REST simulator, you will need a valid authentication token for the backend API.
