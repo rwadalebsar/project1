@@ -1,0 +1,25 @@
+# Protocol Simulator Dependencies
+# Install with: pip install -r requirements.txt
+
+# MQTT Simulator
+paho-mqtt>=1.6.0
+
+# REST API Simulator  
+requests>=2.28.0
+
+# GraphQL Simulator
+flask>=2.2.0
+flask-cors>=4.0.0
+
+# OPC UA Simulator
+asyncua>=1.0.0
+
+# Modbus Simulator
+pymodbus>=3.0.0
+
+# Common utilities
+argparse  # Built-in, but listed for completeness
+json      # Built-in
+datetime  # Built-in
+threading # Built-in
+asyncio   # Built-in

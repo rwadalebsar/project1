@@ -1,111 +1,227 @@
-# Protocol Simulators
+# Protocol Simulators for Tank Monitoring System
 
-## Purpose
-These scripts simulate external devices or services sending tank level data to the main backend application using various supported protocols. They are intended for testing the backend's data ingestion capabilities.
+This directory contains comprehensive simulators for all protocols supported by the tank monitoring system. These simulators allow you to test and develop against realistic data sources without needing actual hardware.
 
-## Supported Simulators
-- **REST API Simulator (`rest_simulator.py`)**: Sends data directly to the backend's `/api/tank-levels` POST endpoint.
-- **MQTT Simulator (`mqtt_simulator.py`)**: Publishes data to an MQTT broker, which the backend should be configured to subscribe to.
+## 🚀 Available Simulators
 
-**Note on Other Protocols (GraphQL, OPC UA, Modbus):**
-Simulators for direct data ingestion via GraphQL, OPC UA, or Modbus have not been created because the backend application is designed to act as a *client* for these protocols (i.e., it fetches data *from* external GraphQL/OPC UA/Modbus services). The current simulators focus on protocols where the backend actively listens for or accepts incoming data (REST API) or subscribes to messages (MQTT).
-
-## Prerequisites
-- Python 3.x
-- The `requests` library for `rest_simulator.py`. This is typically included in the main backend's `requirements.txt`.
-- The `paho-mqtt` library for `mqtt_simulator.py`. This might need to be installed separately if not part of the main backend's dependencies:
+### 1. MQTT Simulator
+- **File**: `mqtt_simulator.py`
+- **Purpose**: Simulates sending tank level data via MQTT protocol
+- **Protocol**: MQTT 3.1.1
+- **Usage**: 
   ```bash
-  pip install paho-mqtt
+  python mqtt_simulator.py --broker localhost --topic-prefix tanks --tank-id tank1 --level 75.5
   ```
 
----
-#### Setting up a Local MQTT Broker (for MQTT Simulator)
-For testing the MQTT simulator, you'll need an MQTT broker. If you don't have one, you can install Mosquitto, a popular open-source broker:
+### 2. REST API Simulator
+- **File**: `rest_simulator.py`
+- **Purpose**: Simulates sending tank level data to REST API endpoints
+- **Protocol**: HTTP/REST
+- **Usage**:
+  ```bash
+  python rest_simulator.py --url http://localhost:8000/api/tank-levels --tank-id tank1 --level 75.5 --token YOUR_AUTH_TOKEN
+  ```
 
-**On macOS (using Homebrew):**
+### 3. GraphQL Simulator ⭐ NEW
+- **File**: `graphql_simulator.py`
+- **Purpose**: Creates a GraphQL server that provides tank data
+- **Protocol**: GraphQL over HTTP
+- **Features**: 
+  - Real-time data updates
+  - Multiple tanks with realistic simulation
+  - GraphQL schema introspection
+- **Usage**:
+  ```bash
+  python graphql_simulator.py --port 4000
+  ```
+- **Endpoints**:
+  - GraphQL: `http://localhost:4000/graphql`
+  - Health: `http://localhost:4000/health`
+- **Sample Queries**:
+  ```graphql
+  # Get all tanks
+  { tanks { id name level status } }
+  
+  # Get specific tank with readings
+  { tank(id: "tank1") { id name level lastUpdated readings { timestamp level } } }
+  ```
+
+### 4. OPC UA Simulator ⭐ NEW
+- **File**: `opcua_simulator.py`
+- **Purpose**: Creates an OPC UA server with tank data nodes
+- **Protocol**: OPC UA
+- **Features**:
+  - Standard OPC UA server implementation
+  - Hierarchical tank data structure
+  - Real-time value updates
+  - Device identification
+- **Usage**:
+  ```bash
+  python opcua_simulator.py --port 4840
+  ```
+- **Endpoint**: `opc.tcp://localhost:4840/freeopcua/server/`
+- **Node Structure**:
+  ```
+  Objects/
+  └── Tanks/
+      ├── Main Storage Tank/
+      │   ├── Level (Float)
+      │   ├── Status (String)
+      │   ├── Capacity (Float)
+      │   └── LastUpdated (String)
+      ├── Secondary Tank/
+      └── Emergency Reserve/
+  ```
+
+### 5. Modbus Simulator ⭐ NEW
+- **File**: `modbus_simulator.py`
+- **Purpose**: Creates a Modbus TCP server with tank register data
+- **Protocol**: Modbus TCP
+- **Features**:
+  - Standard Modbus TCP implementation
+  - Holding registers for tank data
+  - Real-time register updates
+  - Device identification
+- **Usage**:
+  ```bash
+  python modbus_simulator.py --port 5020  # Use 5020 to avoid root privileges
+  ```
+- **Register Mapping** (per tank, 8 registers each):
+  ```
+  Tank 1: Registers 0-7
+  Tank 2: Registers 10-17  
+  Tank 3: Registers 20-27
+  
+  Layout per tank:
+  Reg +0-1: Level (32-bit float)
+  Reg +2-3: Capacity (32-bit float)
+  Reg +4:   Status (16-bit int: 0=NORMAL, 1=LOW, 2=HIGH)
+  Reg +5:   Tank ID Hash (16-bit int)
+  Reg +6-7: Timestamp (32-bit int)
+  ```
+
+## 📦 Installation
+
+### Quick Setup
 ```bash
-brew install mosquitto
-# To start Mosquitto (usually starts automatically after install or on reboot):
-brew services start mosquitto
-# To run it in the foreground for testing (optional):
-# /usr/local/opt/mosquitto/sbin/mosquitto -c /usr/local/etc/mosquitto/mosquitto.conf
+# Install all dependencies
+pip install -r requirements.txt
 ```
 
-**On Linux (Debian/Ubuntu):**
+### Individual Dependencies
 ```bash
-sudo apt update
+# MQTT
+pip install paho-mqtt
+
+# REST API
+pip install requests
+
+# GraphQL
+pip install flask flask-cors
+
+# OPC UA
+pip install asyncua
+
+# Modbus
+pip install pymodbus
+```
+
+## 🧪 Testing
+
+### Test All Simulators
+```bash
+python test_all_simulators.py
+```
+
+### Test Individual Simulators
+```bash
+# Test REST (requires backend running)
+python rest_simulator.py --url http://localhost:8000/api/tank-levels --tank-id test --level 50 --token YOUR_TOKEN
+
+# Test MQTT (requires MQTT broker)
+python mqtt_simulator.py --broker localhost --topic-prefix tanks --tank-id test --level 50
+
+# Test GraphQL (starts server)
+python graphql_simulator.py --port 4000
+
+# Test OPC UA (starts server)
+python opcua_simulator.py --port 4840
+
+# Test Modbus (starts server)
+python modbus_simulator.py --port 5020
+```
+
+## 🔧 Configuration
+
+### MQTT Broker Setup
+For MQTT testing, install Mosquitto:
+
+**Linux/macOS:**
+```bash
+# Ubuntu/Debian
 sudo apt install mosquitto mosquitto-clients
-# Mosquitto usually starts automatically. To check status:
-# sudo systemctl status mosquitto
+
+# macOS
+brew install mosquitto
+brew services start mosquitto
 ```
 
-**On Linux (Fedora):**
-```bash
-sudo dnf install mosquitto
-# Mosquitto usually starts automatically. To check status:
-# sudo systemctl status mosquitto
-```
+**Windows:**
+Download from [Mosquitto Downloads](https://mosquitto.org/download/)
 
-**On Windows:**
-- Download the installer from the [Mosquitto Downloads page](https://mosquitto.org/download/).
-- Run the installer and follow the prompts.
-- After installation, Mosquitto might run as a service automatically, or you might need to start it from the Start Menu or command line. Refer to the Mosquitto documentation for specifics.
+### Backend Configuration
+Ensure your backend is configured to connect to these simulators:
 
-**Basic Mosquitto Configuration:**
-Mosquitto typically works out-of-the-box for local, unauthenticated connections on port 1883. For more advanced configurations (like adding users/passwords or TLS), refer to the official [Mosquitto documentation](https://mosquitto.org/documentation/).
+1. **GraphQL**: Update `backend/graphql_data/config.json`
+2. **OPC UA**: Update `backend/opcua_data/config.json`
+3. **Modbus**: Update `backend/modbus_data/config.json`
+4. **MQTT**: Update `backend/mqtt_data/config.json`
 
----
-- Ensure the main backend application is running.
-- For the MQTT simulator, ensure an MQTT broker is running and accessible, and that the backend is configured to connect to it and subscribe to the relevant topics.
-- For the REST simulator, you will need a valid authentication token for the backend API.
+## 🚀 Quick Start Guide
 
-## Running the Simulators
+1. **Install dependencies**:
+   ```bash
+   pip install -r requirements.txt
+   ```
 
-### 1. REST API Simulator (`rest_simulator.py`)
+2. **Start a simulator** (choose one):
+   ```bash
+   # GraphQL Server
+   python graphql_simulator.py --port 4000
+   
+   # OPC UA Server
+   python opcua_simulator.py --port 4840
+   
+   # Modbus Server
+   python modbus_simulator.py --port 5020
+   ```
 
-This script sends a single tank level reading to the backend via a POST request.
+3. **Configure backend** to connect to the simulator
 
-**Command-line arguments:**
-- `--url`: (Required) The full URL of the backend's tank level API endpoint (e.g., `http://localhost:8000/api/tank-levels`).
-- `--tank-id`: (Required) The ID of the tank (e.g., `tank001`).
-- `--level`: (Required) The tank level to send (e.g., `75.5`).
-- `--token`: (Required) The Bearer authentication token for the API.
+4. **Test the connection** using the backend's protocol clients
 
-**Example Usage:**
-```bash
-python simulators/rest_simulator.py \
-  --url http://localhost:8000/api/tank-levels \
-  --tank-id "tankAlpha" \
-  --level 63.2 \
-  --token "your_jwt_token_here"
-```
+## 📊 Simulator Features
 
-### 2. MQTT Simulator (`mqtt_simulator.py`)
+| Protocol | Real-time Updates | Multiple Tanks | Authentication | Status Codes |
+|----------|------------------|----------------|----------------|--------------|
+| MQTT     | ✅               | ✅             | Optional       | ✅           |
+| REST     | ✅               | ✅             | Required       | ✅           |
+| GraphQL  | ✅               | ✅             | None           | ✅           |
+| OPC UA   | ✅               | ✅             | None           | ✅           |
+| Modbus   | ✅               | ✅             | None           | ✅           |
 
-This script publishes a single tank level reading to an MQTT topic. The backend's MQTT client should be configured to listen to this topic.
+## 🛠️ Development
 
-**Command-line arguments:**
-- `--broker`: (Required) MQTT broker address (e.g., `localhost`).
-- `--port`: MQTT broker port (default: `1883`).
-- `--topic-prefix`: (Required) Topic prefix used by the backend (e.g., `tanks/data`). The message will be published to `<topic-prefix>/<tank-id>`.
-- `--tank-id`: (Required) The ID of the tank (e.g., `tankBeta`).
-- `--level`: (Required) The tank level to send (e.g., `82.1`).
-- `--username`: (Optional) MQTT username.
-- `--password`: (Optional) MQTT password.
-- `--client-id`: (Optional) MQTT client ID.
+To add new simulators or modify existing ones:
 
-**Example Usage:**
-```bash
-python simulators/mqtt_simulator.py \
-  --broker "localhost" \
-  --port 1883 \
-  --topic-prefix "tanks/telemetry" \
-  --tank-id "tankGamma" \
-  --level 45.9
-```
-(Add `--username youruser --password yourpass` if your broker requires authentication)
+1. Follow the existing patterns in the simulator files
+2. Add appropriate error handling and logging
+3. Update this README with new features
+4. Add tests to `test_all_simulators.py`
 
-## Verifying Simulator Operation
-After running a simulator:
-- **REST Simulator:** Check the script's output for a success status code (e.g., 200 or 201) from the backend. You can then verify in the application's frontend or via its API that the new tank level data for the specified `tank-id` has been recorded.
-- **MQTT Simulator:** The script will output a success message if the publish was acknowledged by the broker. Verify in the application's frontend or via its API that the new tank level data (sent via MQTT) for the specified `tank-id` has been processed and recorded by the backend. Check backend logs if data does not appear, ensuring the backend's MQTT client is connected to the same broker and subscribed to the correct topic structure (`<topic-prefix>/<tank-id>`).
+## 📝 Notes
+
+- **Port Requirements**: Modbus port 502 requires root privileges on Linux
+- **Dependencies**: Each simulator has specific Python package requirements
+- **Testing**: Use the test script to verify all simulators work correctly
+- **Configuration**: Backend must be configured to connect to simulator endpoints
