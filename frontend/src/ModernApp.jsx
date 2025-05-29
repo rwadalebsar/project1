@@ -540,7 +540,7 @@ function ModernApp({ initialTab = 'dashboard' }) {
     const savedConfig = localStorage.getItem('tankApiConfig')
     // Force update the API URL to ensure it's correct
     const defaultConfig = {
-      apiUrl: 'http://localhost:8003',
+      apiUrl: 'http://localhost:8000',
       apiKey: '',
       tankId: 'tank1',
       useMockData: true
@@ -551,7 +551,7 @@ function ModernApp({ initialTab = 'dashboard' }) {
       // Always use the correct API URL
       return {
         ...parsedConfig,
-        apiUrl: 'http://localhost:8003'
+        apiUrl: 'http://localhost:8000'
       }
     }
 

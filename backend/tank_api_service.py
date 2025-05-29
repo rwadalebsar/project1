@@ -4,6 +4,7 @@ import os
 import logging
 from datetime import datetime, timedelta
 import pandas as pd
+import numpy as np
 from typing import List, Dict, Any, Optional
 
 # Configure logging
@@ -203,13 +204,13 @@ class TankAPIService:
         for i in range(365 * 24):
             timestamp = now - timedelta(hours=i)
             # Base level with some seasonal pattern (higher in summer, lower in winter)
-            base_level = 5.0 + 1.0 * pd.np.sin(2 * pd.np.pi * i / (365 * 24))
+            base_level = 5.0 + 1.0 * np.sin(2 * np.pi * i / (365 * 24))
             # Add some random noise
-            noise = pd.np.random.normal(0, 0.2)
+            noise = np.random.normal(0, 0.2)
             # Add some random anomalies (about 1%)
             anomaly = 0
-            if pd.np.random.random() < 0.01:
-                anomaly = pd.np.random.choice([-2, 2]) * pd.np.random.random()
+            if np.random.random() < 0.01:
+                anomaly = np.random.choice([-2, 2]) * np.random.random()
             level = max(0, min(10, base_level + noise + anomaly))
             tank_data.append({
                 "timestamp": timestamp,
